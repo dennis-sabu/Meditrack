@@ -26,7 +26,7 @@ const Contact = () => {
       } else {
         setSubmitMessage('Failed to send message. Please try again.');
       }
-    } catch (error) {
+    } catch {
       setSubmitMessage('An error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -43,7 +43,7 @@ const Contact = () => {
           <div>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               Get in Touch with Our <br />
-              <span className="text-blue-600">Healthcare Team</span>
+              <span className="text-green-600">Healthcare Team</span>
             </h2>
             
             <p className="text-lg text-gray-600 mb-8 leading-relaxed">
@@ -57,8 +57,8 @@ const Contact = () => {
             <div className="space-y-6 mb-8">
               {/* Phone Support */}
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FaPhone className="text-blue-600" />
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaPhone className="text-green-600" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Phone Support</h3>
@@ -75,7 +75,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Email Support</h3>
-                  <p className="text-gray-600">support@medilink.com</p>
+                  <p className="text-gray-600">support@meditrack.com</p>
                   <p className="text-sm text-gray-500">Response within 24 hours</p>
                 </div>
               </div>
@@ -83,8 +83,8 @@ const Contact = () => {
 
               {/* Office Address */}
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FaMapMarkerAlt className="text-purple-600" />
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaMapMarkerAlt className="text-green-600" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Office Address</h3>
@@ -96,8 +96,8 @@ const Contact = () => {
 
               {/* Emergency Support */}
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <FaClock className="text-red-600" />
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaClock className="text-green-600" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Emergency Support</h3>
@@ -112,16 +112,16 @@ const Contact = () => {
             <div>
               <h3 className="font-semibold text-gray-900 mb-4">Follow Us</h3>
               <div className="flex space-x-4">
-                <a href="#" className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition">
+                <a href="#" className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700 transition">
                   <FaFacebookF />
                 </a>
-                <a href="#" className="w-10 h-10 bg-blue-400 text-white rounded-full flex items-center justify-center hover:bg-blue-500 transition">
+                <a href="#" className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition">
                   <FaTwitter />
                 </a>
-                <a href="#" className="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center hover:bg-blue-800 transition">
+                <a href="#" className="w-10 h-10 bg-green-700 text-white rounded-full flex items-center justify-center hover:bg-green-800 transition">
                   <FaLinkedinIn />
                 </a>
-                <a href="#" className="w-10 h-10 bg-pink-600 text-white rounded-full flex items-center justify-center hover:bg-pink-700 transition">
+                <a href="#" className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700 transition">
                   <FaInstagram />
                 </a>
               </div>
@@ -151,7 +151,7 @@ const Contact = () => {
                     name="name"
                     placeholder="Enter your full name"
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
                   />
                 </div>
                 
@@ -165,7 +165,7 @@ const Contact = () => {
                     name="email"
                     placeholder="your@email.com"
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
                   />
                 </div>
               </div>
@@ -180,7 +180,7 @@ const Contact = () => {
                     id="phone"
                     name="phone"
                     placeholder="+1 (555) 123-4567"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
                   />
                 </div>
                 
@@ -192,7 +192,7 @@ const Contact = () => {
                     id="subject"
                     name="subject"
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
                   >
                     <option value="">Select a subject</option>
                     <option value="general">General Inquiry</option>
@@ -214,7 +214,7 @@ const Contact = () => {
                   placeholder="Please describe your inquiry or message in detail"
                   required
                   rows={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition resize-none"
                 />
               </div>
 
@@ -235,7 +235,7 @@ const Contact = () => {
                 className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
                   isSubmitting 
                     ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-green-600 text-white hover:bg-green-700'
                 }`}
               >
                 {isSubmitting ? 'Sending...' : 'Send Message'}
@@ -248,8 +248,8 @@ const Contact = () => {
         {/* Bottom Features */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
           <div className="text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaHeadphones className="text-blue-600 text-2xl" />
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FaHeadphones className="text-green-600 text-2xl" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">24/7 Support</h3>
             <p className="text-gray-600">
@@ -270,8 +270,8 @@ const Contact = () => {
 
 
           <div className="text-center">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaUsers className="text-purple-600 text-2xl" />
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FaUsers className="text-green-600 text-2xl" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Expert Team</h3>
             <p className="text-gray-600">
