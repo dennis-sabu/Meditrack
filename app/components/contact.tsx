@@ -62,7 +62,7 @@ const Contact = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Phone Support</h3>
-                  <p className="text-gray-600">+1 (555) 123-4567</p>
+                  <p className="text-gray-600">91+ 9074578332</p>
                   <p className="text-sm text-gray-500">Mon-Fri, 8AM-6PM EST</p>
                 </div>
               </div>
@@ -274,8 +274,8 @@ const Contact = () => {
               <FaUsers className="text-green-600 text-2xl" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Expert Team</h3>
-            <p className="text-gray-600">
-              Healthcare technology specialists ready to assist you.
+            <p className="text-sm text-gray-600">
+              Experienced team delivering dependable, patient-focused healthcare tech.
             </p>
           </div>
         </div>
