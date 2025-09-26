@@ -399,7 +399,7 @@ const Settings = () => {
               👤
             </div>
             <button className="w-full bg-green-500 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-600 transition-colors text-sm">
-              Upgrade Today's pro
+              Upgrade Today&apos;s pro
             </button>
           </div>
           

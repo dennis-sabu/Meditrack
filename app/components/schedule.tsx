@@ -258,7 +258,7 @@ const ScheduleManagement = () => {
               {showDropdown && searchResults.length === 0 && newSchedule.patientName.trim() && (
                 <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-10 mt-1">
                   <div className="px-3 py-2 text-gray-500 text-sm">
-                    No patients found matching "{newSchedule.patientName}"
+                    No patients found matching &quot;{newSchedule.patientName}&quot;
                   </div>
                 </div>
               )}
