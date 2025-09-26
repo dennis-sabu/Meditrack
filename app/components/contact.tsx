@@ -179,7 +179,7 @@ const Contact = () => {
                     type="tel"
                     id="phone"
                     name="phone"
-                    placeholder="+1 (555) 123-4567"
+                    placeholder="91+ 9074578332"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
                   />
                 </div>
