@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
   });
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/signin', '/signup', '/api/auth', '/'];
+  const publicRoutes = ['/signin', '/signup', '/api/auth', '/admin/login','/'];
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
 
   // If accessing public route, continue
@@ -33,9 +33,9 @@ export async function middleware(request: NextRequest) {
 
   // Role-based route protection
   const roleRouteMap = {
-    ADMIN: ['/admin', '/dashboard'],
-    HOSPITAL_ADMIN: ['/hospital', '/dashboard'],
-    DOCTOR: ['/doctor', '/dashboard'],
+    ADMIN: ['/admin/dashboard'],
+    HOSPITAL_ADMIN: ['/hospitals','/hospitals/dashboard'],
+    DOCTOR: ['/doctors','/doctors/dashboard'],
   };
 
   // Check if user is accessing the right routes for their role
@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
     hasAccess = allowedRoutes.some(route => pathname.startsWith(route));
   }
 
-  // Allow access to general protected routes like /api, /settings, etc.
+  // // Allow access to general protected routes like /api, /settings, etc.
   const generalProtectedRoutes = ['/api', '/settings', '/profile'];
   if (generalProtectedRoutes.some(route => pathname.startsWith(route))) {
     hasAccess = true;
@@ -61,10 +61,10 @@ export async function middleware(request: NextRequest) {
         redirectPath = '/admin/dashboard';
         break;
       case 'HOSPITAL_ADMIN':
-        redirectPath = '/hospital/dashboard';
+        redirectPath = '/hospitals/dashboard';
         break;
       case 'DOCTOR':
-        redirectPath = '/doctor/dashboard';
+        redirectPath = '/doctors/dashboard';
         break;
       default:
         redirectPath = '/signin';

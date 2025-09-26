@@ -14,7 +14,6 @@ import { ZodError } from 'zod';
 
 import { getTrpcError } from '../db/utils';
 import { createTRPCContext } from './context';
-import { isAdminEmail } from '@/lib/validator';
 
 /**
  * 1. CONTEXT

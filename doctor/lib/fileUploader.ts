@@ -1,5 +1,5 @@
 
-import { BASE_URL } from "@/constants";
+// import { BASE_URL } from "@/constants";
 import axios from "axios";
 
 export const uploadFileToS3 = async (
@@ -13,7 +13,7 @@ export const uploadFileToS3 = async (
         formData.append("prefix", prefix);
 
         // Ensure full URL for API request
-        const apiUrl = `${BASE_URL}/api/upload`;
+        const apiUrl = `localhost:3000/api/upload`;
 
         const response = await axios.post(apiUrl, formData, {
             headers: { "Content-Type": "multipart/form-data" },

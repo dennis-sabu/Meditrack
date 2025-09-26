@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Building2, User, FileBadge } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import Logo from "@/components/user/logo";
@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
 // Validation schemas
 const loginSchema = z.object({
@@ -35,27 +35,43 @@ const loginSchema = z.object({
 //   path: ["confirmPassword"],
 // });
 
-const doctorSignupSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name too long"),
-  email: z.string().email("Please enter a valid email address"),
-  governmentId: z.string().min(5, "Medical license number is required"),
-  password: z.string().min(6, "Password must be at least 6 characters").max(100, "Password too long"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const doctorSignupSchema = z
+  .object({
+    name: z
+      .string()
+      .min(2, "Name must be at least 2 characters")
+      .max(50, "Name too long"),
+    email: z.string().email("Please enter a valid email address"),
+    governmentId: z.string().min(5, "Medical license number is required"),
+    password: z
+      .string()
+      .min(6, "Password must be at least 6 characters")
+      .max(100, "Password too long"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
-const hospitalSignupSchema = z.object({
-  hospitalName: z.string().min(2, "Hospital name must be at least 2 characters").max(100, "Name too long"),
-  email: z.string().email("Please enter a valid email address"),
-  governmentId: z.string().min(5, "Hospital registration number is required"),
-  password: z.string().min(6, "Password must be at least 6 characters").max(100, "Password too long"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const hospitalSignupSchema = z
+  .object({
+    hospitalName: z
+      .string()
+      .min(2, "Hospital name must be at least 2 characters")
+      .max(100, "Name too long"),
+    email: z.string().email("Please enter a valid email address"),
+    governmentId: z.string().min(5, "Hospital registration number is required"),
+    password: z
+      .string()
+      .min(6, "Password must be at least 6 characters")
+      .max(100, "Password too long"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 type LoginFormData = z.infer<typeof loginSchema>;
 // type PatientSignupFormData = z.infer<typeof patientSignupSchema>;
@@ -64,7 +80,7 @@ type HospitalSignupFormData = z.infer<typeof hospitalSignupSchema>;
 
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
-
+  const session = useSession();
   // Form configurations
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -73,7 +89,28 @@ export default function AuthPage() {
       password: "",
     },
   });
-
+  useEffect(() => {
+    if (session) {
+      console.log(session);
+      if (session?.data?.user?.role && session.status == 'authenticated') {
+        if(session?.data?.user?.isVerified === false){ 
+          toast.error("Your account is deactivated. Please contact support.");
+        }else{
+          const role = session?.data?.user?.role.toLowerCase();
+          window.location.href = `/${role}/dashboard`;
+        }
+        if(session?.data?.user?.role === "HOSPITAL_ADMIN"){
+          window.location.href = `/hospitals/dashboard`;
+        }
+        if(session?.data?.user?.role === "DOCTOR"){
+          window.location.href = `/doctors/dashboard`;
+        }
+        if(session?.data?.user?.role === "ADMIN"){
+          window.location.href = `/admin/dashboard`;
+        }
+      }   
+    }
+  }, [session]);
   const doctorSignupForm = useForm<DoctorSignupFormData>({
     resolver: zodResolver(doctorSignupSchema),
     defaultValues: {
@@ -98,8 +135,54 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   // // API mutations
   // const loginMutation = api.auth.loginwithEmail.useMutation();
-  const doctorRegisterMutation = api.auth.registerDoctor.useMutation();
-  const hospitalRegisterMutation = api.auth.registerHospitalAdmin.useMutation();
+  const doctorRegisterMutation = api.auth.registerDoctor.useMutation({
+    onSuccess: () => {
+      doctorSignupForm.reset();
+      setMode("login");
+      toast.success(
+        "Doctor registration submitted for verification! Check your email for updates."
+      );
+    },
+    onError: (error) => {
+      toast.error(error.message || "Registration failed");
+    },
+  });
+  const loginverificationmutation = api.auth.verifyLogin.useMutation({
+    onSuccess: (data) => {
+      console.log(data);
+      if (data.data) {
+        toast.success("Login successful!");
+        setLoading(false);
+        const result = signIn("credentials", {
+          redirect: false,
+          email: loginForm.getValues("email"),
+          password: loginForm.getValues("password"),
+          callbackUrl: `/dashboard`,
+        });
+        console.log("Logged in user:", result);
+      } else {
+        toast.error(data.message || "Login failed");
+        setLoading(false);
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || "Login failed");
+      setLoading(false);
+    },
+  });
+        
+  const hospitalRegisterMutation = api.auth.registerHospitalAdmin.useMutation({
+    onSuccess: () => {
+      hospitalRegisterMutation.reset();
+      setMode("login");
+      toast.success(
+        "Hospital Admin registration submitted for verification! Check your email for updates."
+      );
+    },
+    onError: (error) => {
+      toast.error(error.message || "Registration failed");
+    },
+  });
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-blue-50 to-blue-100 p-6">
       <motion.div
@@ -152,17 +235,12 @@ export default function AuthPage() {
             <form
               onSubmit={loginForm.handleSubmit(async (data) => {
                 try {
-                  const result = await signIn("credentials", {
-                    redirect: false,
+                  setLoading(true);
+                  const result = await loginverificationmutation.mutateAsync({
                     email: data.email,
                     password: data.password,
-                    callbackUrl: `${window.location.origin}/dashboard`
                   });
-                  if (result?.ok) {
-                    console.log("Logged in user:", result)
-                    toast.success("Login successful!");
-
-                  };
+                  setLoading(false);
                 } catch {
                   toast.error("Login failed. Please check your credentials.");
                 }
@@ -180,7 +258,9 @@ export default function AuthPage() {
                   />
                 </div>
                 {loginForm.formState.errors.email && (
-                  <p className="text-red-500 text-sm mt-1">{loginForm.formState.errors.email.message}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {loginForm.formState.errors.email.message}
+                  </p>
                 )}
               </div>
 
@@ -196,13 +276,15 @@ export default function AuthPage() {
                   />
                 </div>
                 {loginForm.formState.errors.password && (
-                  <p className="text-red-500 text-sm mt-1">{loginForm.formState.errors.password.message}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {loginForm.formState.errors.password.message}
+                  </p>
                 )}
               </div>
 
               <Button
                 type="submit"
-disabled={loading}
+                disabled={loading}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
               >
                 {loading ? "Signing in..." : "Login"}
@@ -210,13 +292,16 @@ disabled={loading}
             </form>
           ) : (
             <Tabs defaultValue="doctor">
-              <TabsList  className="grid grid-cols-2 mb-6 h-[50px]">
-                <TabsTrigger className="w-full h-full" value="doctor">Doctor</TabsTrigger>
-                <TabsTrigger className="w-full h-full" value="hospital">Hospital Admin</TabsTrigger>
+              <TabsList className="grid grid-cols-2 mb-6 h-[50px]">
+                <TabsTrigger className="w-full h-full" value="doctor">
+                  Doctor
+                </TabsTrigger>
+                <TabsTrigger className="w-full h-full" value="hospital">
+                  Hospital Admin
+                </TabsTrigger>
               </TabsList>
 
               {/* Patient Signup */}
-              
 
               {/* Doctor Signup */}
               <TabsContent value="doctor">
@@ -231,15 +316,17 @@ disabled={loading}
                         specialization: "General Medicine", // Default value
                         experienceYears: 1,
                         qualifications: "MBBS",
-                        consultationFee: 500
+                        consultationFee: 500,
                       });
 
                       if (result.success) {
-                        toast.success("Doctor registration submitted for verification!");
+                        // toast.success("Doctor registration submitted for verification!");
                         doctorSignupForm.reset();
                       }
                     } catch (error) {
-                      toast.error((error as Error).message || "Registration failed");
+                      toast.error(
+                        (error as Error).message || "Registration failed"
+                      );
                     }
                   })}
                   className="space-y-4"
@@ -255,7 +342,9 @@ disabled={loading}
                       />
                     </div>
                     {doctorSignupForm.formState.errors.name && (
-                      <p className="text-red-500 text-sm mt-1">{doctorSignupForm.formState.errors.name.message}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {doctorSignupForm.formState.errors.name.message}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -269,7 +358,9 @@ disabled={loading}
                       />
                     </div>
                     {doctorSignupForm.formState.errors.email && (
-                      <p className="text-red-500 text-sm mt-1">{doctorSignupForm.formState.errors.email.message}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {doctorSignupForm.formState.errors.email.message}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -283,7 +374,9 @@ disabled={loading}
                       />
                     </div>
                     {doctorSignupForm.formState.errors.governmentId && (
-                      <p className="text-red-500 text-sm mt-1">{doctorSignupForm.formState.errors.governmentId.message}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {doctorSignupForm.formState.errors.governmentId.message}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -298,7 +391,9 @@ disabled={loading}
                       />
                     </div>
                     {doctorSignupForm.formState.errors.password && (
-                      <p className="text-red-500 text-sm mt-1">{doctorSignupForm.formState.errors.password.message}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {doctorSignupForm.formState.errors.password.message}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -313,15 +408,25 @@ disabled={loading}
                       />
                     </div>
                     {doctorSignupForm.formState.errors.confirmPassword && (
-                      <p className="text-red-500 text-sm mt-1">{doctorSignupForm.formState.errors.confirmPassword.message}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {
+                          doctorSignupForm.formState.errors.confirmPassword
+                            .message
+                        }
+                      </p>
                     )}
                   </div>
                   <Button
                     type="submit"
-                    disabled={!doctorSignupForm.formState.isValid || doctorRegisterMutation.isPending}
+                    disabled={
+                      !doctorSignupForm.formState.isValid ||
+                      doctorRegisterMutation.isPending
+                    }
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
                   >
-                    {doctorRegisterMutation.isPending ? "Registering..." : "Sign Up as Doctor"}
+                    {doctorRegisterMutation.isPending
+                      ? "Registering..."
+                      : "Sign Up as Doctor"}
                   </Button>
                 </form>
               </TabsContent>
@@ -331,22 +436,26 @@ disabled={loading}
                 <form
                   onSubmit={hospitalSignupForm.handleSubmit(async (data) => {
                     try {
-                      const result = await hospitalRegisterMutation.mutateAsync({
-                        name: data.hospitalName,
-                        email: data.email,
-                        password: data.password,
-                        hospitalName: data.hospitalName,
-                        contactNumber: "1234567890", // Default value
-                        address: "Hospital Address", // Default value
-                        registrationNumber: data.governmentId,
-                      });
+                      const result = await hospitalRegisterMutation.mutateAsync(
+                        {
+                          name: data.hospitalName,
+                          email: data.email,
+                          password: data.password,
+                          hospitalName: data.hospitalName,
+                          contactNumber: "1234567890", // Default value
+                          address: "Hospital Address", // Default value
+                          registrationNumber: data.governmentId,
+                        }
+                      );
 
                       if (result.success) {
-                        toast.success("Hospital admin registration submitted for verification!");
+                        // toast.success("Hospital admin registration submitted for verification!");
                         hospitalSignupForm.reset();
                       }
                     } catch (error) {
-                      toast.error((error as Error).message || "Registration failed");
+                      toast.error(
+                        (error as Error).message || "Registration failed"
+                      );
                     }
                   })}
                   className="space-y-4"
@@ -362,7 +471,12 @@ disabled={loading}
                       />
                     </div>
                     {hospitalSignupForm.formState.errors.hospitalName && (
-                      <p className="text-red-500 text-sm mt-1">{hospitalSignupForm.formState.errors.hospitalName.message}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {
+                          hospitalSignupForm.formState.errors.hospitalName
+                            .message
+                        }
+                      </p>
                     )}
                   </div>
                   <div>
@@ -376,7 +490,9 @@ disabled={loading}
                       />
                     </div>
                     {hospitalSignupForm.formState.errors.email && (
-                      <p className="text-red-500 text-sm mt-1">{hospitalSignupForm.formState.errors.email.message}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {hospitalSignupForm.formState.errors.email.message}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -390,7 +506,12 @@ disabled={loading}
                       />
                     </div>
                     {hospitalSignupForm.formState.errors.governmentId && (
-                      <p className="text-red-500 text-sm mt-1">{hospitalSignupForm.formState.errors.governmentId.message}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {
+                          hospitalSignupForm.formState.errors.governmentId
+                            .message
+                        }
+                      </p>
                     )}
                   </div>
                   <div>
@@ -405,7 +526,9 @@ disabled={loading}
                       />
                     </div>
                     {hospitalSignupForm.formState.errors.password && (
-                      <p className="text-red-500 text-sm mt-1">{hospitalSignupForm.formState.errors.password.message}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {hospitalSignupForm.formState.errors.password.message}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -420,15 +543,25 @@ disabled={loading}
                       />
                     </div>
                     {hospitalSignupForm.formState.errors.confirmPassword && (
-                      <p className="text-red-500 text-sm mt-1">{hospitalSignupForm.formState.errors.confirmPassword.message}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {
+                          hospitalSignupForm.formState.errors.confirmPassword
+                            .message
+                        }
+                      </p>
                     )}
                   </div>
                   <Button
                     type="submit"
-                    disabled={!hospitalSignupForm.formState.isValid || hospitalRegisterMutation.isPending}
+                    disabled={
+                      !hospitalSignupForm.formState.isValid ||
+                      hospitalRegisterMutation.isPending
+                    }
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
                   >
-                    {hospitalRegisterMutation.isPending ? "Registering..." : "Sign Up as Hospital Admin"}
+                    {hospitalRegisterMutation.isPending
+                      ? "Registering..."
+                      : "Sign Up as Hospital Admin"}
                   </Button>
                 </form>
               </TabsContent>

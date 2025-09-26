@@ -2,14 +2,21 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/utils/react";
+import { TRPCError } from "@trpc/server";
+import { TRPCClientError } from "@trpc/client";
+import { signIn, useSession } from "next-auth/react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const user  = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const loginMutation = api.admin.createAdmin.useMutation();
+  if(user?.data?.user?.role === 'ADMIN'){
+    router.push('/admin/dashboard');
+  }
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -19,18 +26,32 @@ export default function AdminLoginPage() {
       return;
     }
 
-    setLoading(true);
-    const result = await loginMutation.mutateAsync({
-      email,
-      password,
-      name: "Admin",
-      phone: "93993939",
-    });
-    console.log(result);
     try {
-      const a = router.push("/admin/dashboard");
-    } catch (err: any) {
-      setError(err?.message || "Login failed");
+      setLoading(true);
+      const result = await loginMutation.mutateAsync({
+        email,
+        password,
+        name: "Admin",
+        phone: "93993939",
+      });
+      console.log(result);
+      if(result.success){
+        router.push("/admin/dashboard");
+        signIn("credentials", { email, password, callbackUrl: "/admin/dashboard" });
+      }else{
+        setError("Login failed");
+      }
+    } catch (err) {
+      if (err instanceof TRPCClientError) {
+       
+        const msg = (err.data?.zodError?.fieldErrors?.password?.[0] ||
+          err.data?.zodError?.fieldErrors?.email?.[0] ||
+          err.message ||
+          "Login failed") as string;
+        setError(msg);
+        return;
+      }
+      setError((err as unknown as any)?.message || "Login failed");
     } finally {
       setLoading(false);
     }

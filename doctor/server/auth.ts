@@ -20,7 +20,7 @@ declare module "next-auth" {
     email: string;
     image: string | null;
     phone: string | null;
-    role: "SUPER_ADMIN" | "HOSPITAL_ADMIN" | "DOCTOR";
+    role: "ADMIN" | "HOSPITAL_ADMIN" | "DOCTOR";
     loginType: "Credentials";
     isVerified: boolean;
     governmentId: string | null;
@@ -59,30 +59,32 @@ export const authOptions: NextAuthOptions = {
         });
         if (!user) return null;
 
+        // Auto-verify the first super admin
         const isPasswordValid = await compare(
           parsed.data.password,
           user.passwordHash ?? ""
         );
         if (!isPasswordValid) return null;
-
-        // Allow only SUPER_ADMIN, HOSPITAL_ADMIN, and DOCTOR
+        if (user.role == 'ADMIN') {
+          return user as unknown as User;
+        }
+        // Allow only ADMIN, HOSPITAL_ADMIN, and DOCTOR
         if (
-          user.role !== "SUPER_ADMIN" &&
+          user.role !== "ADMIN" &&
           user.role !== "HOSPITAL_ADMIN" &&
           user.role !== "DOCTOR"
         ) {
           throw new Error("Access restricted to verified staff only");
         }
 
-        // SUPER_ADMIN always allowed
-        if (user.role === "SUPER_ADMIN") return user as unknown as User;
-
-        // HOSPITAL_ADMIN & DOCTOR must be verified
-        if (!user.isVerified) {
-          throw new Error("Account not verified by Super Admin");
-        }
-
         return user as unknown as User;
+
+        // ADMIN always allowed
+        // HOSPITAL_ADMIN & DOCTOR must be verified
+        // if (!user.isVerified) {
+        //   throw new Error(`Account not verified by Super Admin - ${user.name+user.isActive,user.isVerified}`, { cause: "UNVERIFIED" });
+        // }
+
       },
     }),
   ],
@@ -97,10 +99,10 @@ export const authOptions: NextAuthOptions = {
       if (!user) return false;
 
       // Super admin bypass
-      if (user.role === "SUPER_ADMIN") return true;
+      if (user.role === "ADMIN") return true;
 
       // Hospital & Doctor require verification
-      if (!user.isVerified) return false;
+      // if (!user.isVerified) return false;
 
       return true;
     },

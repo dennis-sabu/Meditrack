@@ -1,0 +1,1 @@
+ALTER TABLE "doctors" ALTER COLUMN "status" SET NOT NULL;

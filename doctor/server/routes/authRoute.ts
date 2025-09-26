@@ -23,7 +23,7 @@ export const authRouter = createTRPCRouter({
         hospitalName: z.string().min(2),
       })
     )
-    .mutation(async ({ input,ctx }) => {
+    .mutation(async ({ input, ctx }) => {
       const existingHospital = await db.query.hospitals.findFirst({
         where: eq(hospitals.registrationNumber, input.registrationNumber),
       });
@@ -57,7 +57,7 @@ export const authRouter = createTRPCRouter({
       const [hospital] = await db
         .insert(hospitals)
         .values({
-          name:   `${input.hospitalName}`,
+          name: `${input.hospitalName}`,
           email: `${input.email}`,
           userId: hospitalAdmin.id,
           address: `${input.address}`,
@@ -69,11 +69,87 @@ export const authRouter = createTRPCRouter({
 
       return {
         success: true,
-        message: "Hospital registration submitted for SUPER_ADMIN approval",
+        message: "Hospital registration submitted for ADMIN approval",
         hospital,
       };
     }),
+  verifyLogin: publicProcedure.
+    input(z.object({ email: z.string().email(), password: z.string().min(6) }))
+    .mutation(async ({ input, ctx }) => {
+      const credentials = z.object({ email: z.string().email(), password: z.string().min(6) }).safeParse(input);
+      if (!credentials.success) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid input" });
+      }
 
+      const user = await db.query.users.findFirst({
+        where: eq(users.email, credentials.data.email),
+      });
+      if (user?.role == "HOSPITAL_ADMIN") {
+        const hospitalAdmin = await db.query.hospitals.findFirst({
+          where:
+            eq(hospitals.userId, user.id)
+        });
+        if (!hospitalAdmin?.isVerified) {
+          return {
+            message: "Account pending approval",
+            data: false,
+          };
+        } else if (!hospitalAdmin.isActive) {
+          return {
+            message: "Account is inactive. Contact support.",
+            data: false,
+          };
+        } else {
+          const passwordMatch = await bcrypt.compare(input.password, user.passwordHash);
+          if (!passwordMatch) {
+            return {
+              message: "Invalid Credentials",
+              data: false
+            }
+          } else {
+            return {
+              message: "Account verified",
+              data: true,
+            };
+          }
+        }
+      } else if (user?.role == "DOCTOR") {
+        const doctor = await db.query.doctors.findFirst({
+          where:
+            eq(doctors.userId, user.id)
+        });
+        if (!doctor?.isVerified) {
+          return {
+            message: "Account pending approval",
+            data: false,
+          };
+        }
+        else if (!doctor.isActive) {
+          return {
+            message: "Account is inactive. Contact support.",
+            data: false,
+          };
+        } else {
+          const passwordMatch = await bcrypt.compare(input.password, user.passwordHash);
+          if (!passwordMatch) {
+            return {
+              message: "Invalid Credentials",
+              data: false
+            }
+          } else {
+            return {
+              message: "Account verified",
+              data: true,
+            };
+          }
+        }
+      } else {
+        return {
+          message: "Account not authorized",
+          data: false,
+        };
+      }
+    }),
   /* 🔹 Register Doctor */
   registerDoctor: publicProcedure
     .input(
@@ -84,7 +160,7 @@ export const authRouter = createTRPCRouter({
         medicalLicenseNumber: z.string().min(5),
         specialization: z.string().min(2),
         experienceYears: z.number().optional(),
-        qualifications: z.string().min(5),
+        qualifications: z.string().min(3),
         bio: z.string().optional(),
         consultationFee: z.number().optional(),
       })
@@ -137,7 +213,7 @@ export const authRouter = createTRPCRouter({
 
       return {
         success: true,
-        message: "Doctor registration submitted for SUPER_ADMIN approval",
+        message: "Doctor registration submitted for ADMIN approval",
         doctor,
       };
     }),
@@ -192,7 +268,7 @@ export const authRouter = createTRPCRouter({
         throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid credentials" });
       }
 
-      if (u.role !== "SUPER_ADMIN" && !u.isVerified) {
+      if (u.role !== "ADMIN" && !u.isVerified) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Account pending approval" });
       }
 
@@ -201,14 +277,14 @@ export const authRouter = createTRPCRouter({
       return { message: "Login successful", user: u };
     }),
 
-  /* 🔹 SUPER_ADMIN: Verify Hospital */
+  /* 🔹 ADMIN: Verify Hospital */
   verifyHospital: protectedProcedure
     .input(z.object({ hospitalId: z.number(), approve: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       const admin = await db.query.users.findFirst({
         where: eq(users.id, Number(ctx.session.user.id)),
       });
-      if (!admin || admin.role !== "SUPER_ADMIN") {
+      if (!admin || admin.role !== "ADMIN") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only Super Admin can verify hospitals" });
       }
 
@@ -220,14 +296,14 @@ export const authRouter = createTRPCRouter({
       return { success: true, message: "Hospital verification updated" };
     }),
 
-  /* 🔹 SUPER_ADMIN: Verify Doctor */
+  /* 🔹 ADMIN: Verify Doctor */
   verifyDoctor: protectedProcedure
     .input(z.object({ doctorId: z.number(), approve: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       const admin = await db.query.users.findFirst({
         where: eq(users.id, Number(ctx.session.user.id)),
       });
-      if (!admin || admin.role !== "SUPER_ADMIN") {
+      if (!admin || admin.role !== "ADMIN") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only Super Admin can verify doctors" });
       }
 

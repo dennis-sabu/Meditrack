@@ -74,7 +74,7 @@ export const adminRouter = createTRPCRouter({
 
       const offset = (input.page - 1) * input.limit;
 
-      let whereConditions = [];
+      let whereConditions = [] as any[];
 
       if (input.search) {
         whereConditions.push(
@@ -228,7 +228,7 @@ export const adminRouter = createTRPCRouter({
           isVerified: input.approved,
           isActive: input.approved,
           updatedAt: new Date(),
-          createdBy: Number(ctx.session.user.id),
+          verifiedBy: Number(ctx.session.user.id),
         })
         .where(eq(hospitals.id, input.hospitalId))
         .returning();
@@ -270,6 +270,7 @@ export const adminRouter = createTRPCRouter({
         .set({
           isVerified: input.approved,
           isActive: input.approved,
+          verifiedBy: Number(ctx.session.user.id),
           updatedAt: new Date(),
         })
         .where(eq(doctors.id, input.doctorId))
@@ -311,11 +312,12 @@ export const adminRouter = createTRPCRouter({
         .update(hospitals)
         .set({
           isActive: input.active,
+          isVerified: input.active ? true : false,
+          status: input.active ? "active" : "rejected",
           updatedAt: new Date(),
         })
         .where(eq(hospitals.id, input.hospitalId))
         .returning();
-
       if (!updatedHospital) {
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -326,8 +328,8 @@ export const adminRouter = createTRPCRouter({
       return {
         success: true,
         message: input.active
-          ? "Hospital activated successfully"
-          : "Hospital suspended successfully",
+          ? `Hospital activated successfully ${input.hospitalId}`
+          : `Hospital suspended successfully ${input.hospitalId}`,
       };
     }),
 
@@ -366,6 +368,7 @@ export const adminRouter = createTRPCRouter({
 
       return {
         success: true,
+        isVerified: input.active ? true : false,
         message: input.active
           ? "Doctor activated successfully"
           : "Doctor suspended successfully",
@@ -392,7 +395,7 @@ export const adminRouter = createTRPCRouter({
 
       const offset = (input.page - 1) * input.limit;
 
-      let whereConditions = [];
+      let whereConditions = [] as any[];
 
       if (input.search) {
         whereConditions.push(
@@ -449,51 +452,61 @@ export const adminRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // if (ctx.session?.user?.role !== "SUPER_ADMIN") {
-      //   throw new TRPCError({
-      //     code: "FORBIDDEN",
-      //     message: "Access denied",
-      //   });
-      // }
 
-      // Check if email already exists
       const existingUser = await ctx.db
         .select()
         .from(users)
-        .where(eq(users.email, input.email))
         .limit(1);
 
-      if (existingUser.length > 0) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "Email already registered",
-        });
+      if (existingUser.length == 0) {
+        // Allow creating the first admin user if no users exist
+        const hashedPassword = await bcrypt.hash(input.password, 10);
+        const [newAdmin] = await ctx.db
+          .insert(users)
+          .values({
+            name: input.name,
+            email: input.email,
+            passwordHash: hashedPassword,
+            phone: input.phone || null,
+            role: "ADMIN",
+            loginType: "Credentials",
+            emailVerified: true,
+            isActive: true,
+          })
+          .returning();
+
+        return {
+          success: true,
+          message: "Admin user created successfully",
+          admin: {
+            id: newAdmin.id,
+            name: newAdmin.name,
+            email: newAdmin.email,
+            role: newAdmin.role,
+          },
+        };
       }
 
-      const hashedPassword = await bcrypt.hash(input.password, 10);
-
-      const [newAdmin] = await ctx.db
-        .insert(users)
-        .values({
-          name: input.name,
-          email: input.email,
-          passwordHash: hashedPassword,
-          phone: input.phone || null,
-          role: "SUPER_ADMIN",
-          loginType: "Credentials",
-          emailVerified: true,
-          isActive: true,
-        })
-        .returning();
-
+      //otherwise check that the requester is an admin from database
+      const requester = await ctx.db
+        .select()
+        .from(users)
+        .where(eq(users.email, input.email))
+        .limit(1)
+      if (requester.length == 0 || requester[0]?.role !== "ADMIN") {
+        return {
+          success: false,
+          message: "Only existing admin users can create new admin accounts",
+        };
+      }
       return {
         success: true,
-        message: "Admin user created successfully",
+        message: "Admin Logged in Successfully",
         admin: {
-          id: newAdmin.id,
-          name: newAdmin.name,
-          email: newAdmin.email,
-          role: newAdmin.role,
+          id: requester[0].id,
+          name: requester[0].name,
+          email: requester[0].email,
+          role: requester[0].role,
         },
       };
     }),

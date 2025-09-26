@@ -1,5 +1,6 @@
 import { pgTable, serial, varchar, integer, boolean, timestamp, text, json, decimal } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { create } from "domain";
 //
 
 
@@ -10,7 +11,7 @@ export const users = pgTable("users", {
   name: varchar("name", { length: 100 }).notNull(),
   email: varchar("email", { length: 150 }).notNull().unique(),
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
-  role: varchar("role", { length: 30 }).notNull(), // SUPER_ADMIN, HOSPITAL, DOCTOR, PATIENT
+  role: varchar("role", { length: 30 }).notNull(), // ADMIN, HOSPITAL, DOCTOR, PATIENT
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   phone: varchar("phone", { length: 20 }),
@@ -35,12 +36,13 @@ export const hospitals = pgTable("hospitals", {
   contactNumber: varchar("contact_number", { length: 20 }),
   email: varchar("email", { length: 150 }),
   registrationNumber: varchar("registration_number", { length: 100 }),
-  isVerified: boolean("is_verified").default(false), // SUPER_ADMIN must set to true
+  isVerified: boolean("is_verified").default(false), // ADMIN must set to true
   verifiedBy: integer("verified_by").references(() => users.id), // Super Admin who approved
   verifiedAt: timestamp("verified_at"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  status: varchar("status", { length: 20 }).default("pending"), // active, inactive, rejected, pending
 });
 
 //
@@ -56,13 +58,15 @@ export const doctors = pgTable("doctors", {
   qualifications: text("qualifications"),
   consultationFee: decimal("consultation_fee", { precision: 10, scale: 2 }),
   availableHours: json("available_hours"), // {"mon": ["09:00-17:00"]}
-  isVerified: boolean("is_verified"), // SUPER_ADMIN must approve
+  isVerified: boolean("is_verified"), // ADMIN must approve
   verifiedBy: integer("verified_by").references(() => users.id), // Super Admin who approved
   verifiedAt: timestamp("verified_at"),
   isActive: boolean("is_active").default(true),
   bio: text("bio"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // active, inactive, rejected, pending
+
 });
 
 //
@@ -73,6 +77,8 @@ export const patients = pgTable("patients", {
   userId: integer("user_id").references(() => users.id).notNull(), // patient login
   dob: timestamp("dob"),
   gender: varchar("gender", { length: 10 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastVisit: timestamp("last_visit"),
   allergies: text("allergies"),
   medicalHistory: text("medical_history"),
 });
