@@ -62,7 +62,6 @@ export const hospitalRouter = createTRPCRouter({
             role: "HOSPITAL_ADMIN",
             loginType: "Credentials",
             emailVerified: true,
-            governmentId: input.registrationNumber,
           })
           .returning();
 
@@ -71,11 +70,12 @@ export const hospitalRouter = createTRPCRouter({
           .insert(hospitals)
           .values({
             name: input.name,
+            userId: hospitalAdmin.id,
             email: input.email,
             address: input.address,
-            contactNumber: input.contactNumber,
+            // contactNumber: input.contactNumber,
             registrationNumber: input.registrationNumber,
-            adminId: hospitalAdmin.id,
+            // adminId: hospitalAdmin.id,
             isVerified: false, // Pending admin approval
           })
           .returning();
@@ -148,7 +148,7 @@ export const hospitalRouter = createTRPCRouter({
           adminEmail: users.email,
         })
         .from(hospitals)
-        .leftJoin(users, eq(hospitals.adminId, users.id))
+        .leftJoin(users, eq(hospitals.userId, users.id))
         .where(whereClause)
         .orderBy(desc(hospitals.createdAt))
         .limit(input.limit)
@@ -224,7 +224,7 @@ export const hospitalRouter = createTRPCRouter({
     const hospital = await ctx.db
       .select()
       .from(hospitals)
-      .where(eq(hospitals.adminId, Number(ctx.session.user.id)))
+      .where(eq(hospitals.userId, Number(ctx.session.user.id)))
       .limit(1);
 
     if (!hospital[0]) {
@@ -250,19 +250,18 @@ export const hospitalRouter = createTRPCRouter({
           .where(
             and(
               eq(appointments.hospitalId, hospitalId),
-              sql`DATE(${appointments.scheduledAt}) = CURRENT_DATE`
+              sql`DATE(${appointments.appointmentDate}) = CURRENT_DATE`
             )
           ),
 
         ctx.db
           .select({ count: sql<number>`count(*)` })
           .from(hospitalDoctors)
-          .where(
-            and(
-              eq(hospitalDoctors.hospitalId, hospitalId),
-              eq(hospitalDoctors.status, "PENDING")
-            )
-          ),
+          .where(and(
+            eq(hospitalDoctors.hospitalId, hospitalId),
+          )),
+
+
 
         ctx.db
           .select({ count: sql<number>`count(*)` })
@@ -303,7 +302,7 @@ export const hospitalRouter = createTRPCRouter({
       const hospital = await ctx.db
         .select({ id: hospitals.id })
         .from(hospitals)
-        .where(eq(hospitals.adminId, Number(ctx.session.user.id)))
+        .where(eq(hospitals.userId, Number(ctx.session.user.id)))
         .limit(1);
 
       if (!hospital[0]) {
@@ -370,7 +369,7 @@ export const hospitalRouter = createTRPCRouter({
       const hospital = await ctx.db
         .select({ id: hospitals.id })
         .from(hospitals)
-        .where(eq(hospitals.adminId, Number(ctx.session.user.id)))
+        .where(eq(hospitals.userId, Number(ctx.session.user.id)))
         .limit(1);
 
       if (!hospital[0]) {
