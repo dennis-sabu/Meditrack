@@ -197,7 +197,6 @@ const Contact = () => {
                     <option value="">Select a subject</option>
                     <option value="general">General Inquiry</option>
                     <option value="technical">Technical Support</option>
-                    <option value="billing">Billing Question</option>
                     <option value="partnership">Partnership</option>
                     <option value="feedback">Feedback</option>
                   </select>
