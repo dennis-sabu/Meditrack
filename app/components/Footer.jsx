@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { HiPlus, HiMinus } from "react-icons/hi";
+import { FaFacebookF, FaInstagram, FaGithub } from "react-icons/fa";
 import gsap from "gsap";
 
 const faqs = [
@@ -68,7 +69,9 @@ export default function FaqWithFooter() {
   }, [openIndex]);
 
   return (
-    <div className="w-full">
+    <div 
+  
+    className="w-full">
       {/* FAQ Section */}
       <section className="max-w-7xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-12 items-start">
         {/* Left - Heading + Image */}
@@ -129,30 +132,31 @@ export default function FaqWithFooter() {
               className="object-contain"
               loading="lazy"
             />
-            <span className="font-bold text-xl">Medilink</span>
+            <span className="font-bold text-xl">Meditrack</span>
           </div>
 
           {/* Nav Links */}
           <nav className="flex gap-6 text-sm text-white-700  ">
             <a
             className="hover:text-green-500 transition"
-            href="#">Home</a>
+            href="/">Home</a>
             <a
             className="hover:text-green-500 transition"
-            href="#">How it works</a>
+            href="/doctors">How it works</a>
             <a 
             className="hover:text-green-500 transition"
-            href="#">For doctors</a>
+            href="/doctors">For doctors</a>
             <a 
             className="hover:text-green-500 transition"
-            
-            href="#">For patients</a>
+            href="/patients">For patients</a>
             
             
           </nav>
 
           {/* Contact / Social */}
-          <div className="flex flex-col items-start gap-4">
+          <div 
+          id="contact"
+          className="flex flex-col items-start gap-4">
             <form
               action="mailto:contact@medilink.com"
               method="GET"
@@ -179,26 +183,50 @@ export default function FaqWithFooter() {
               </button>
             </form>
 
-            {/* Social Icons */}
-            <div className="flex gap-4 text-xl">
-              <a href="#" aria-label="Facebook" className="hover:text-green-500 transition">
-                <i className="fab fa-facebook"></i>
-              </a>
-              <a href="#" aria-label="LinkedIn" className="hover:text-green-500 transition">
-                <i className="fab fa-linkedin"></i>
-              </a>
-              <a href="#" aria-label="Instagram" className="hover:text-green-500 transition">
-                <i className="fab fa-instagram"></i>
-              </a>
+            
+          </div>
+          </div>
+        {/* Bottom Section */}
+        <div className="border-t mt-6 pt-4 pb-4 text-sm text-gray-400 max-w-7xl mx-auto px-6">
+          {/* Copyright and Links Row */}
+          <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+            <p>© All rights reserved. Meditrack</p>
+            <div className="flex gap-6">
+              <a href="#" className="hover:text-green-500 transition">Privacy Policies</a>
+              <a href="#" className="hover:text-green-500 transition">Terms & Conditions</a>
+              <a href="#" className="hover:text-green-500 transition">Back to top</a>
             </div>
           </div>
-          </div>
-        <div className="border-t mt-6 pt-4 pb-4 text-sm text-white-600 flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto px-6">
-          <p>© All rights reserved. Medilink</p>
-          <div className="flex gap-6">
-            <a href="#">Privacy Policies</a>
-            <a href="#">Terms & Conditions</a>
-            <a href="#">Back to top</a>
+          
+          {/* Social Icons - Centered */}
+          <div className="flex gap-4 text-xl justify-center">
+            <a 
+              href="https://www.facebook.com/meditrack" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              aria-label="Facebook" 
+              className="hover:text-blue-500 transition-colors duration-300 transform hover:scale-110"
+            >
+              <FaFacebookF />
+            </a>
+            <a 
+              href="https://www.instagram.com/meditrack" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              aria-label="Instagram" 
+              className="hover:text-pink-500 transition-colors duration-300 transform hover:scale-110"
+            >
+              <FaInstagram />
+            </a>
+            <a 
+              href="https://github.com/meditrack" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              aria-label="GitHub" 
+              className="hover:text-gray-400 transition-colors duration-300 transform hover:scale-110"
+            >
+              <FaGithub />
+            </a>
           </div>
         </div>
       </footer>
