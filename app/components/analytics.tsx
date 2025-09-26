@@ -211,39 +211,15 @@ const Analytics = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   // Modal states
-  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
   const [showPreviousPrescriptions, setShowPreviousPrescriptions] = useState(false);
   const [prescriptionType, setPrescriptionType] = useState<'text' | 'image'>('text');
   const [prescriptionText, setPrescriptionText] = useState('');
-  
-  // Form states
-  const [appointmentForm, setAppointmentForm] = useState({
-    patientName: '',
-    email: '',
-    gender: '',
-    phone: '',
-    appointmentDate: '',
-    appointmentTime: '',
-    appointmentEndTime: ''
-  });
-  
-  // Search states
-  const [nameSearchResults, setNameSearchResults] = useState<Patient[]>([]);
-  const [phoneSearchResults, setPhoneSearchResults] = useState<Patient[]>([]);
-  const [showNameDropdown, setShowNameDropdown] = useState(false);
-  const [showPhoneDropdown, setShowPhoneDropdown] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setOpenDropdown(null);
-      }
-      // Close search dropdowns when clicking outside
-      const target = event.target as HTMLElement;
-      if (!target.closest('.relative')) {
-        setShowNameDropdown(false);
-        setShowPhoneDropdown(false);
       }
     };
 
@@ -281,19 +257,6 @@ const Analytics = () => {
     setShowPrescriptionModal(true);
   };
 
-  const handleAppointmentSubmit = () => {
-    console.log('Appointment submitted:', appointmentForm);
-    setShowAppointmentModal(false);
-    setAppointmentForm({
-      patientName: '',
-      email: '',
-      gender: '',
-      phone: '',
-      appointmentDate: '',
-      appointmentTime: '',
-      appointmentEndTime: ''
-    });
-  };
 
   const handlePrescriptionSubmit = () => {
     console.log('Prescription submitted:', prescriptionText);
@@ -305,53 +268,6 @@ const Analytics = () => {
     return prescriptionsData.filter(p => p.patientId === patientId);
   };
 
-  const handleNameSearch = (value: string) => {
-    setAppointmentForm({...appointmentForm, patientName: value});
-    if (value.trim()) {
-      const results = patients.filter(patient => 
-        patient.name.toLowerCase().includes(value.toLowerCase())
-      );
-      setNameSearchResults(results);
-      setShowNameDropdown(true);
-    } else {
-      setShowNameDropdown(false);
-    }
-  };
-
-  const handlePhoneSearch = (value: string) => {
-    setAppointmentForm({...appointmentForm, phone: value});
-    if (value.trim()) {
-      const results = patients.filter(patient => 
-        patient.phone.includes(value)
-      );
-      setPhoneSearchResults(results);
-      setShowPhoneDropdown(true);
-    } else {
-      setShowPhoneDropdown(false);
-    }
-  };
-
-  const selectPatientFromName = (patient: Patient) => {
-    setAppointmentForm({
-      ...appointmentForm,
-      patientName: patient.name,
-      email: patient.email,
-      phone: patient.phone,
-      gender: patient.gender
-    });
-    setShowNameDropdown(false);
-  };
-
-  const selectPatientFromPhone = (patient: Patient) => {
-    setAppointmentForm({
-      ...appointmentForm,
-      patientName: patient.name,
-      email: patient.email,
-      phone: patient.phone,
-      gender: patient.gender
-    });
-    setShowPhoneDropdown(false);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -361,12 +277,6 @@ const Analytics = () => {
         <div className="p-6 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-semibold text-gray-800">Patients List</h1>
-            <button 
-              onClick={() => setShowAppointmentModal(true)}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-            >
-              Verify New Appointment
-            </button>
           </div>
         </div>
 
@@ -524,154 +434,6 @@ const Analytics = () => {
         </div>
       </div>
 
-      {/* Verify New Appointment Modal */}
-      {showAppointmentModal && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-white bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-800">Verify New Appointment</h2>
-              <button
-                onClick={() => setShowAppointmentModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <FaTimes />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Patient Name</label>
-                <input
-                  type="text"
-                  value={appointmentForm.patientName}
-                  onChange={(e) => handleNameSearch(e.target.value)}
-                  onFocus={() => appointmentForm.patientName && setShowNameDropdown(true)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Type patient name..."
-                />
-                {showNameDropdown && nameSearchResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
-                    {nameSearchResults.map((patient) => (
-                      <div
-                        key={patient.id}
-                        onClick={() => selectPatientFromName(patient)}
-                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
-                      >
-                        <span className="text-lg">{patient.avatar}</span>
-                        <div>
-                          <div className="font-medium">{patient.name}</div>
-                          <div className="text-sm text-gray-500">{patient.phone}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  value={appointmentForm.email}
-                  onChange={(e) => setAppointmentForm({...appointmentForm, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-                <select
-                  value={appointmentForm.gender}
-                  onChange={(e) => setAppointmentForm({...appointmentForm, gender: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input
-                  type="tel"
-                  value={appointmentForm.phone}
-                  onChange={(e) => handlePhoneSearch(e.target.value)}
-                  onFocus={() => appointmentForm.phone && setShowPhoneDropdown(true)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Type phone number..."
-                />
-                {showPhoneDropdown && phoneSearchResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
-                    {phoneSearchResults.map((patient) => (
-                      <div
-                        key={patient.id}
-                        onClick={() => selectPatientFromPhone(patient)}
-                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
-                      >
-                        <span className="text-lg">{patient.avatar}</span>
-                        <div>
-                          <div className="font-medium">{patient.name}</div>
-                          <div className="text-sm text-gray-500">{patient.phone}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Appointment Date</label>
-                <input
-                  type="date"
-                  value={appointmentForm.appointmentDate}
-                  onChange={(e) => setAppointmentForm({...appointmentForm, appointmentDate: e.target.value})}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-base cursor-pointer"
-                  style={{ colorScheme: 'light' }}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Appointment Time</label>
-                <input
-                  type="time"
-                  value={appointmentForm.appointmentTime}
-                  onChange={(e) => setAppointmentForm({...appointmentForm, appointmentTime: e.target.value})}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-base cursor-pointer"
-                  style={{ colorScheme: 'light' }}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Appointment Time End</label>
-                <input
-                  type="time"
-                  value={appointmentForm.appointmentEndTime}
-                  onChange={(e) => setAppointmentForm({...appointmentForm, appointmentEndTime: e.target.value})}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-base cursor-pointer"
-                  style={{ colorScheme: 'light' }}
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowAppointmentModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAppointmentSubmit}
-                className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-              >
-                Verify & Sync
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Prescription Modal */}
       {showPrescriptionModal && (
