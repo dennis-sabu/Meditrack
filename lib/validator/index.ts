@@ -64,7 +64,7 @@ export const isValidUserDetails = (
 
 
 export const isAdminEmail = (email:string) => {
-    if(email.includes('@admin.bibliya.in')){
+    if(email.includes('admin@')){
         return true;
     }
     return false

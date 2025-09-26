@@ -128,10 +128,11 @@ export const authOptions: NextAuthOptions = {
         if (parsedCredentials.success) {
           if (isAdminEmail(parsedCredentials.data.email)) {
             const admin = await db.query.users.findFirst({
-              where: eq(users.email, parsedCredentials.data.email),
+              where: and(eq(users.email, parsedCredentials.data.email),
+                eq(users.role, "HOSPITAL_ADMIN")),
             });
             const update = await db.update(users).set({
-              lastLogin: new Date()
+              : new Date()
             }).where(eq(users.email, admin?.email ?? ''));
             if (!admin || !await compare(parsedCredentials.data.password, admin?.passwordHash ?? '')) {
               return null;
