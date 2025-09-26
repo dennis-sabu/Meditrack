@@ -1,17 +1,15 @@
 "use client";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { HiChevronDown, HiMenuAlt3, HiX, HiArrowRight } from "react-icons/hi";
+import { HiMenuAlt3, HiX } from "react-icons/hi";
 import gsap from "gsap";
 import Image from "next/image";
 
 export default function Navbar() {
-  const [isProductOpen, setIsProductOpen] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
   const linksRef = useRef<HTMLAnchorElement[]>([]);
-  const productMenuRef = useRef<HTMLDivElement | null>(null);
 
   // Animate in when opening mobile menu
 
@@ -39,32 +37,7 @@ export default function Navbar() {
     }
   }, [isMobileOpen]);
 
-  // Animate Product dropdown (desktop)
-  useEffect(() => {
-    if (productMenuRef.current) {
-      if (isProductOpen) {
-        gsap.fromTo(
-          productMenuRef.current,
-          { y: -20, opacity: 0, scale: 0.95 },
-          {
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            duration: 0.4,
-            ease: "power3.out",
-          }
-        );
-      } else {
-        gsap.to(productMenuRef.current, {
-          y: -20,
-          opacity: 0,
-          scale: 0.95,
-          duration: 0.3,
-          ease: "power2.inOut",
-        });
-      }
-    }
-  }, [isProductOpen]);
+
 
   const closeMobileMenu = () => {
     if (mobileMenuRef.current) {
@@ -99,7 +72,7 @@ export default function Navbar() {
             height={40}
           />
 
-          <span className="text-xl font-semibold text-gray-900">MediLink</span>
+          <span className="text-xl font-semibold text-gray-900">Meditrack</span>
         </Link>
 
         {/* Desktop Menu */}
@@ -107,37 +80,6 @@ export default function Navbar() {
           <Link href="/" className="hover:text-green-600 transition active:scale-95">
             Home
           </Link>
-
-          {/* Product Dropdown */}
-          <div
-            className="relative"
-            onMouseEnter={() => setIsProductOpen(true)}
-            onMouseLeave={() => setIsProductOpen(false)}
-          >
-            <button className="flex items-center space-x-1 hover:text-green-600 transition active:scale-95">
-              <span>Product</span>
-              <HiChevronDown className="w-4 h-4" />
-            </button>
-            {isProductOpen && (
-              <div
-                ref={productMenuRef}
-                className="absolute top-full mt-2 w-48 bg-white shadow-lg rounded-md border border-gray-100 py-2 opacity-0 pointer-events-auto"
-              >
-                <Link
-                  href="/product/feature1"
-                  className="block px-4 py-2 hover:bg-gray-100 text-sm transition active:scale-95"
-                >
-                  Feature 1
-                </Link>
-                <Link
-                  href="/product/feature2"
-                  className="block px-4 py-2 hover:bg-gray-100 text-sm transition active:scale-95"
-                >
-                  Feature 2
-                </Link>
-              </div>
-            )}
-          </div>
 
           <Link href="/doctors" className="hover:text-green-600 transition active:scale-95">
             For Doctors
@@ -197,7 +139,6 @@ export default function Navbar() {
           <div className="flex-1 flex flex-col items-center justify-center space-y-8 text-2xl font-medium">
             {[
               { href: "/", label: "Home" },
-              { href: "/product/feature1", label: "Product" },
               { href: "/doctors", label: "For Doctors" },
               { href: "/patients", label: "For Patients" },
               { href: "/contact", label: "Contact" },
@@ -211,10 +152,7 @@ export default function Navbar() {
                 }}
                 className="hover:text-gray-300 transition active:scale-95"
               >
-                {link.label}{" "}
-                {link.label === "Product" && (
-                  <HiArrowRight className="inline-block" />
-                )}
+                {link.label}
               </Link>
             ))}
           </div>
@@ -225,7 +163,7 @@ export default function Navbar() {
               href="/auth"
               onClick={closeMobileMenu}
               ref={(el) => {
-                if (el) linksRef.current[5] = el;
+                if (el) linksRef.current[4] = el;
               }}
               className="block w-full text-center px-5 py-3 rounded-full border border-white 
               transition hover:bg-white hover:text-black active:scale-95"
@@ -236,7 +174,7 @@ export default function Navbar() {
               href="/auth"
               onClick={closeMobileMenu}
               ref={(el) => {
-                if (el) linksRef.current[6] = el;
+                if (el) linksRef.current[5] = el;
               }}
               className="block w-full text-center px-5 py-3 rounded-full bg-white text-black 
               hover:bg-gray-200 transition active:scale-95"

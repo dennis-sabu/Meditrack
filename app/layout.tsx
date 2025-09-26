@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import ChatWidgetContainer from "./components/ChatWidgetContainer";
+import ToasterProvider from "./components/ToasterProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Meditrack",
-  description: "A simple medication tracker app",
+  description: "A Health Platform You Can Trust",
 };
 
 export default function RootLayout({
@@ -28,6 +30,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <ToasterProvider />
+        {/* Include the ChatWidget at the application root level */}
+        <ChatWidgetContainer />
       </body>
     </html>
   );
