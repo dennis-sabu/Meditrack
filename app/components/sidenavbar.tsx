@@ -6,10 +6,8 @@ import { usePathname } from 'next/navigation';
 import { 
   FaTachometerAlt, 
   FaChartBar, 
-  FaFileInvoice, 
   FaCalendarAlt, 
   FaCalendar, 
-  FaEnvelope, 
   FaBell, 
   FaCog,
   FaUser
@@ -21,10 +19,8 @@ const SideNavbar = () => {
   const menuItems = [
     { name: 'Dashboard', icon: FaTachometerAlt, path: '/Doctorsdashboard', color: 'text-gray-600' },
     { name: 'Analytics', icon: FaChartBar, path: '/Analytics', color: 'text-green-500' },
-    { name: 'Invoice', icon: FaFileInvoice, path: '/invoice', color: 'text-gray-600' },
     { name: 'Schedule', icon: FaCalendarAlt, path: '/schedule', color: 'text-gray-600' },
     { name: 'Calendar', icon: FaCalendar, path: '/calendar', color: 'text-gray-600' },
-    { name: 'Messages', icon: FaEnvelope, path: '/messages', color: 'text-gray-600', badge: '10' },
     { name: 'Notification', icon: FaBell, path: '/notification', color: 'text-gray-600' },
     { name: 'Settings', icon: FaCog, path: '/settings', color: 'text-gray-600' },
   ];
@@ -59,11 +55,6 @@ const SideNavbar = () => {
                 >
                   <item.icon className={`text-lg ${isActive ? 'text-green-500' : item.color}`} />
                   <span className="font-medium">{item.name}</span>
-                  {item.badge && (
-                    <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
-                      {item.badge}
-                    </span>
-                  )}
                 </Link>
               </li>
             );
