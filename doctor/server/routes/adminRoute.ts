@@ -382,7 +382,7 @@ export const adminRouter = createTRPCRouter({
         page: z.number().default(1),
         limit: z.number().default(10),
         search: z.string().optional(),
-        role: z.enum(["all", "ADMIN", "HOSPITAL_ADMIN", "DOCTOR"]).default("all"),
+        role: z.enum(["all", "ADMIN", "HOSPITAL", "DOCTOR"]).default("all"),
       })
     )
     .query(async ({ ctx, input }) => {

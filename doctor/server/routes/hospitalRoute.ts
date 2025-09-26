@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../api/trpc";
-import { and, eq, desc, sql, ilike } from "drizzle-orm";
+import { and, eq, desc, sql, ilike, or, like, gte, lte } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { hospitals, doctors, users, hospitalDoctors, appointments } from "../db/schema";
+import { hospitals, doctors, users, hospitalDoctors, appointments, hospitalJoinRequests } from "../db/schema";
 import bcrypt from "bcrypt";
 
 export const hospitalRouter = createTRPCRouter({
@@ -59,7 +59,7 @@ export const hospitalRouter = createTRPCRouter({
             email: input.email,
             passwordHash: hashedPassword,
             phone: input.contactNumber,
-            role: "HOSPITAL_ADMIN",
+            role: "HOSPITAL",
             loginType: "Credentials",
             emailVerified: true,
           })
@@ -213,7 +213,7 @@ export const hospitalRouter = createTRPCRouter({
 
   // Get hospital dashboard data (for hospital admin)
   getDashboardData: protectedProcedure.query(async ({ ctx }) => {
-    if (ctx.session.user.role !== "HOSPITAL_ADMIN") {
+    if (ctx.session.user.role !== "HOSPITAL") {
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "Access denied",
@@ -291,7 +291,7 @@ export const hospitalRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "HOSPITAL_ADMIN") {
+      if (ctx.session.user.role !== "HOSPITAL") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Access denied",
@@ -358,7 +358,7 @@ export const hospitalRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "HOSPITAL_ADMIN") {
+      if (ctx.session.user.role !== "HOSPITAL") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only hospital admin can verify doctors",
@@ -408,4 +408,405 @@ export const hospitalRouter = createTRPCRouter({
           : "Doctor verification rejected",
       };
     }),
+  getMyHospital:protectedProcedure
+    .query(async ({ ctx }) => {
+      const userRole = ctx.session.user.role;
+      const userId = ctx.session.user.id;
+
+      if (userRole !== "DOCTOR") {
+        throw new Error("Only doctors can access this endpoint");
+      }
+
+      // Get doctor info
+      const doctor = await ctx.db.query.doctors.findFirst({
+        where: eq(doctors.userId, userId),
+      });
+
+      if (!doctor) {
+        throw new Error("Doctor profile not found");
+      }
+
+      // Check if doctor has a hospital connection
+      const hospitalConnection = await ctx.db.query.hospitalDoctors.findFirst({
+        where: eq(hospitalDoctors.doctorId, doctor.id),
+        with: {
+          hospital: {
+            with: {
+              user: {
+                columns: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  phone: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!hospitalConnection) {
+        return null;
+      }
+
+      // Get additional stats
+      const totalDoctors = await ctx.db.query.hospitalDoctors.findMany({
+        where: eq(hospitalDoctors.hospitalId, hospitalConnection.hospital.id),
+      });
+
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date();
+      todayEnd.setHours(23, 59, 59, 999);
+
+      const todayAppointments = await ctx.db.query.appointments.findMany({
+        where: and(
+          eq(appointments.hospitalId, hospitalConnection.hospital.id),
+          eq(appointments.doctorId, doctor.id),
+          gte(appointments.appointmentDate, todayStart),
+          lte(appointments.appointmentDate, todayEnd)
+        ),
+      });
+
+      return {
+        hospital: hospitalConnection.hospital,
+        joinedAt: hospitalConnection.createdAt,
+        totalDoctors: totalDoctors.length,
+        totalPatients: 0, // You can calculate this if needed
+        todayAppointments: todayAppointments.length,
+      };
+    }),
+
+  // ============================================
+  // GET AVAILABLE HOSPITALS (for doctor to browse)
+  // ============================================
+   getAvailableHospitals: protectedProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const userRole = ctx.session.user.role;
+
+      if (userRole !== "DOCTOR") {
+        throw new Error("Only doctors can access this endpoint");
+      }
+
+      let whereConditions : any[] = [
+        eq(hospitals.isVerified, true),
+        eq(hospitals.status, "active"),
+      ];
+
+      if (input.search) {
+        whereConditions.push(
+          or(
+            like(hospitals.name, `%${input?.search ?? ''}%`),
+            like(hospitals.address, `%${input?.search ?? ''}%`)
+          )
+        );
+      }
+
+      const availableHospitals = await ctx.db.query.hospitals.findMany({
+        where: and(...whereConditions),
+        orderBy: [desc(hospitals.createdAt)],
+        limit: 50,
+      });
+
+      return availableHospitals;
+    }),
+
+  // ============================================
+  // SEND JOIN REQUEST (doctor to hospital)
+  // ============================================
+   sendJoinRequest: protectedProcedure
+    .input(
+      z.object({
+        hospitalId: z.number(),
+        department: z.string().min(1, "Department is required"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userRole = ctx.session.user.role;
+      const userId = ctx.session.user.id;
+
+      if (userRole !== "DOCTOR") {
+        throw new Error("Only doctors can send join requests");
+      }
+
+      // Get doctor info
+      const doctor = await ctx.db.query.doctors.findFirst({
+        where: eq(doctors.userId, userId),
+      });
+
+      if (!doctor) {
+        throw new Error("Doctor profile not found");
+      }
+
+      // Check if already connected
+      const existingConnection = await ctx.db.query.hospitalDoctors.findFirst({
+        where: eq(hospitalDoctors.doctorId, doctor.id),
+      });
+
+      if (existingConnection) {
+        throw new Error("You are already connected to a hospital");
+      }
+
+      // Check if request already exists
+      const existingRequest = await ctx.db.query.hospitalJoinRequests.findFirst({
+        where: and(
+          eq(hospitalJoinRequests.doctorId, doctor.id),
+          eq(hospitalJoinRequests.hospitalId, input.hospitalId),
+          eq(hospitalJoinRequests.status, "pending")
+        ),
+      });
+
+      if (existingRequest) {
+        throw new Error("You have already sent a request to this hospital");
+      }
+
+      // Create join request
+      const request = await ctx.db
+        .insert(hospitalJoinRequests)
+        .values({
+          doctorId: doctor.id,
+          hospitalId: input.hospitalId,
+          department: input.department,
+          status: "pending",
+        })
+        .returning();
+
+      return request[0];
+    }),
+
+  // ============================================
+  // GET MY HOSPITAL REQUESTS (for doctor)
+  // ============================================
+  getMyHospitalRequests :protectedProcedure
+    .query(async ({ ctx }) => {
+      const userRole = ctx.session.user.role;
+      const userId = ctx.session.user.id;
+
+      if (userRole !== "DOCTOR") {
+        throw new Error("Only doctors can access this endpoint");
+      }
+
+      const doctor = await ctx.db.query.doctors.findFirst({
+        where: eq(doctors.userId, userId),
+      });
+
+      if (!doctor) {
+        throw new Error("Doctor profile not found");
+      }
+
+      const requests = await ctx.db.query.hospitalJoinRequests.findMany({
+        where: and(
+          eq(hospitalJoinRequests.doctorId, doctor.id),
+          eq(hospitalJoinRequests.status, "pending")
+        ),
+        with: {
+          hospital: true,
+        },
+        orderBy: [desc(hospitalJoinRequests.createdAt)],
+      });
+
+      return requests;
+    }),
+
+  // ============================================
+  // CANCEL JOIN REQUEST (for doctor)
+  // ============================================
+   cancelJoinRequest :protectedProcedure
+    .input(
+      z.object({
+        requestId: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userRole = ctx.session.user.role;
+      const userId = ctx.session.user.id;
+
+      if (userRole !== "DOCTOR") {
+        throw new Error("Only doctors can cancel requests");
+      }
+
+      const doctor = await ctx.db.query.doctors.findFirst({
+        where: eq(doctors.userId, userId),
+      });
+
+      if (!doctor) {
+        throw new Error("Doctor profile not found");
+      }
+
+      // Verify request belongs to doctor
+      const request = await ctx.db.query.hospitalJoinRequests.findFirst({
+        where: and(
+          eq(hospitalJoinRequests.id, input.requestId),
+          eq(hospitalJoinRequests.doctorId, doctor.id)
+        ),
+      });
+
+      if (!request) {
+        throw new Error("Request not found");
+      }
+
+      // Delete the request
+      await ctx.db
+        .delete(hospitalJoinRequests)
+        .where(eq(hospitalJoinRequests.id, input.requestId));
+
+      return { success: true };
+    }),
+
+  // ============================================
+  // GET PENDING REQUESTS (for hospital admin)
+  // ============================================
+  getPendingRequests :protectedProcedure
+    .query(async ({ ctx }) => {
+      const userRole = ctx.session.user.role;
+      const userId = ctx.session.user.id;
+
+      if (userRole !== "HOSPITAL") {
+        throw new Error("Only hospital admins can access this endpoint");
+      }
+
+      const hospital = await ctx.db.query.hospitals.findFirst({
+        where: eq(hospitals.userId, userId),
+      });
+
+      if (!hospital) {
+        throw new Error("Hospital not found");
+      }
+
+      const requests = await ctx.db.query.hospitalJoinRequests.findMany({
+        where: and(
+          eq(hospitalJoinRequests.hospitalId, hospital.id),
+          eq(hospitalJoinRequests.status, "pending")
+        ),
+        with: {
+          doctor: {
+            with: {
+              user: {
+                columns: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  phone: true,
+                  image: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: [desc(hospitalJoinRequests.createdAt)],
+      });
+
+      return requests;
+    }),
+
+  // ============================================
+  // APPROVE JOIN REQUEST (for hospital admin)
+  // ============================================
+   approveJoinRequest : protectedProcedure
+    .input(
+      z.object({
+        requestId: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userRole = ctx.session.user.role;
+      const userId = ctx.session.user.id;
+
+      if (userRole !== "HOSPITAL") {
+        throw new Error("Only hospital admins can approve requests");
+      }
+
+      const hospital = await ctx.db.query.hospitals.findFirst({
+        where: eq(hospitals.userId, userId),
+      });
+
+      if (!hospital) {
+        throw new Error("Hospital not found");
+      }
+
+      // Get the request
+      const request = await ctx.db.query.hospitalJoinRequests.findFirst({
+        where: and(
+          eq(hospitalJoinRequests.id, input.requestId),
+          eq(hospitalJoinRequests.hospitalId, hospital.id),
+          eq(hospitalJoinRequests.status, "pending")
+        ),
+      });
+
+      if (!request) {
+        throw new Error("Request not found");
+      }
+
+      // Create hospital-doctor connection
+      await ctx.db.insert(hospitalDoctors).values({
+        hospitalId: hospital.id,
+        doctorId: request.doctorId,
+      });
+
+      // Update doctor's hospitalId
+      await ctx.db
+        .update(doctors)
+        .set({ hospitalId: hospital.id })
+        .where(eq(doctors.id, request.doctorId));
+
+      // Update request status
+      await ctx.db
+        .update(hospitalJoinRequests)
+        .set({
+          status: "approved",
+          respondedBy: userId,
+          respondedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(hospitalJoinRequests.id, input.requestId));
+
+      return { success: true };
+    }),
+
+  // ============================================
+  // REJECT JOIN REQUEST (for hospital admin)
+  // ============================================
+  rejectJoinRequest : protectedProcedure
+    .input(
+      z.object({
+        requestId: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userRole = ctx.session.user.role;
+      const userId = ctx.session.user.id;
+
+      if (userRole !== "HOSPITAL") {
+        throw new Error("Only hospital admins can reject requests");
+      }
+
+      const hospital = await ctx.db.query.hospitals.findFirst({
+        where: eq(hospitals.userId, userId),
+      });
+
+      if (!hospital) {
+        throw new Error("Hospital not found");
+      }
+
+      // Update request status
+      await ctx.db
+        .update(hospitalJoinRequests)
+        .set({
+          status: "rejected",
+          respondedBy: userId,
+          respondedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(and(
+          eq(hospitalJoinRequests.id, input.requestId),
+          eq(hospitalJoinRequests.hospitalId, hospital.id)
+        ));
+
+      return { success: true };
+    })
 });

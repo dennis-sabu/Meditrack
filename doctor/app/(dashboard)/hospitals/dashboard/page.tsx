@@ -10,11 +10,12 @@ import {
   Activity,
   TrendingUp,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 export default function DoctorDashboard() {
   const [noHospital, setNoHospital] = useState<boolean>(false);
-
+    const session = useSession();
   const { data, isLoading } = api.user.getDashboardData.useQuery();
   useEffect(() => {
     if (data?.doctor) {
@@ -55,7 +56,7 @@ export default function DoctorDashboard() {
         {/* Header */}
         <div className="space-y-2">
           <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-            Doctor Dashboard
+            {session?.data?.user?.role == 'HOSPITAL' ? "Hospital Admin" : "Doctor"} Dashboard
           </h1>
           <p className="text-slate-600 text-lg">
             Welcome back! Here{"'"}s your practice overview

@@ -84,7 +84,7 @@ export const authRouter = createTRPCRouter({
       const user = await db.query.users.findFirst({
         where: eq(users.email, credentials.data.email),
       });
-      if (user?.role == "HOSPITAL_ADMIN") {
+      if (user?.role == "HOSPITAL") {
         const hospitalAdmin = await db.query.hospitals.findFirst({
           where:
             eq(hospitals.userId, user.id)

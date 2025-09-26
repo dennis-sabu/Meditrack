@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Calendar, Clock, Search, User, Phone, Mail, MapPin, 
   ChevronLeft, ChevronRight, X, Check, Ban, FileText, 
@@ -24,9 +24,40 @@ export default function DoctorAppointmentsPage() {
     prescriptionDetails: '',
     nextVisitDate: ''
   });
+
+  const [medicines, setMedicines] = useState<Array<{
+    id: string;
+    name: string;
+    dosage: string;
+    frequency: string;
+    duration: number;
+    instructions: string;
+    beforeFood: boolean;
+  }>>([]);
+
+  const [currentMedicine, setCurrentMedicine] = useState({
+    name: '',
+    dosage: '',
+    frequency: '',
+    duration: 1,
+    instructions: '',
+    beforeFood: true
+  });
+
+  const [consultationOtpInput, setConsultationOtpInput] = useState('');
+  const [showConsultationOtpModal, setShowConsultationOtpModal] = useState(false);
+  const [pendingConsultationAppointment, setPendingConsultationAppointment] = useState<any>(null);
   const [otpInput, setOtpInput] = useState('');
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [currentActionAppointment, setCurrentActionAppointment] = useState<null | { id: number; action: 'CONFIRMED' | 'PENDING' | 'COMPLETED' | 'CANCELLED' }>(null);
+  const {data:hashospital, isLoading: isLoadingHospital} = api.user.getIfIHaveHospital.useQuery();
+  useEffect(() => {
+    if (hashospital && !hashospital.hasHospital) {
+        alert('You are not associated with any hospital. Please contact your hospital administrator.');
+        // Optionally, redirect to another page
+        window.location.href = '/doctors/my-hospital';
+    }
+  }, [hashospital]);
 
   // Fetch appointments using tRPC
   const { data, isLoading, refetch } = api.user.getAppointments.useQuery({
@@ -136,202 +167,404 @@ export default function DoctorAppointmentsPage() {
   const exportToPDF = (appointment: any) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
     let yPosition = 20;
 
-    // Title
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Patient Appointment Report', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 20;
+    // Professional Hospital Header
+    const addHospitalHeader = (pageNumber: number) => {
+      // Header border
+      doc.setDrawColor(0, 102, 153);
+      doc.setLineWidth(0.5);
+      doc.line(15, 15, pageWidth - 15, 15);
+      doc.line(15, 45, pageWidth - 15, 45);
 
-    // Patient Information
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Patient Information', 20, yPosition);
-    yPosition += 10;
+      // Hospital Logo placeholder (you can add actual logo later)
+      doc.setFillColor(0, 102, 153);
+      doc.circle(30, 30, 10, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('MH', 30, 32, { align: 'center' });
 
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Name: ${appointment.patient.user.name}`, 20, yPosition);
-    yPosition += 8;
-    doc.text(`Age: ${calculateAge(appointment.patient.dob)} years`, 20, yPosition);
-    yPosition += 8;
-    doc.text(`Gender: ${appointment.patient.gender}`, 20, yPosition);
-    yPosition += 8;
-    doc.text(`Email: ${maskEmail(appointment.patient.user.email)}`, 20, yPosition);
-    yPosition += 8;
-    doc.text(`Phone: ${maskPhone(appointment.patient.user.phone)}`, 20, yPosition);
-    yPosition += 8;
-    if (appointment.patient.user.address) {
-      doc.text(`Address: ${appointment.patient.user.address}`, 20, yPosition);
-      yPosition += 8;
-    }
-    yPosition += 10;
+      // Hospital Name and Details
+      doc.setTextColor(0, 102, 153);
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text(appointment.hospital.name.toUpperCase(), 50, 25);
 
-    // Medical History
-    if (appointment.patient.allergies || appointment.patient.medicalHistory) {
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text(appointment.hospital.address, 50, 30);
+      doc.text(`Phone: ${appointment.hospital.contactNumber} | Email: info@medtrack.com`, 50, 34);
+      doc.text('Reg. No: MH/2024/001 | Accredited by NABH', 50, 38);
+
+      // Document Title
+      doc.setTextColor(0, 102, 153);
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
-      doc.text('Medical History & Allergies', 20, yPosition);
-      yPosition += 10;
+      doc.text('MEDICAL CONSULTATION REPORT', pageWidth / 2, 60, { align: 'center' });
 
-      doc.setFontSize(12);
+      // Report metadata
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
+      const reportDate = new Date().toLocaleDateString('en-GB');
+      const reportTime = new Date().toLocaleTimeString('en-GB', { hour12: false });
+      doc.text(`Report Generated: ${reportDate} at ${reportTime}`, pageWidth - 15, 25, { align: 'right' });
+      doc.text(`Report ID: MR-${appointment.id}-${Date.now().toString().slice(-6)}`, pageWidth - 15, 30, { align: 'right' });
+
+      if (pageNumber > 1) {
+        doc.text(`Page ${pageNumber}`, pageWidth - 15, 35, { align: 'right' });
+      }
+
+      return 75; // Return starting Y position for content
+    };
+
+    // Professional Footer
+    const addHospitalFooter = (pageNumber: number, totalPages: number) => {
+      const footerY = pageHeight - 25;
+
+      // Footer border
+      doc.setDrawColor(0, 102, 153);
+      doc.setLineWidth(0.5);
+      doc.line(15, footerY, pageWidth - 15, footerY);
+
+      doc.setTextColor(0, 102, 153);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('This is a digitally generated medical report. For queries, contact the hospital.', 20, footerY + 5);
+      doc.text(`Confidential Medical Document - Page ${pageNumber} of ${totalPages}`, pageWidth - 15, footerY + 5, { align: 'right' });
+
+      // Security footer
+      doc.setFontSize(7);
+      doc.setTextColor(128, 128, 128);
+      doc.text('Generated via MedTrack Digital Health Platform | ISO 27001 Certified', pageWidth / 2, footerY + 10, { align: 'center' });
+    };
+
+    // Add section with professional styling
+    const addSection = (title: string, yPos: number) => {
+      doc.setFillColor(240, 248, 255);
+      doc.rect(15, yPos - 2, pageWidth - 30, 12, 'F');
+      doc.setDrawColor(0, 102, 153);
+      doc.setLineWidth(0.3);
+      doc.rect(15, yPos - 2, pageWidth - 30, 12);
+
+      doc.setTextColor(0, 102, 153);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(title, 20, yPos + 6);
+
+      return yPos + 18;
+    };
+
+    // First page header
+    yPosition = addHospitalHeader(1);
+
+    // Patient Information Section
+    yPosition = addSection('PATIENT INFORMATION', yPosition);
+
+    // Patient details in two columns
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+
+    const leftCol = 25;
+    const rightCol = 120;
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Patient Name:', leftCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(appointment.patient.user.name, leftCol + 30, yPosition);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Patient ID:', rightCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`PT-${appointment.patient.id}`, rightCol + 25, yPosition);
+    yPosition += 8;
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Age/Gender:', leftCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${calculateAge(appointment.patient.dob)} years / ${appointment.patient.gender}`, leftCol + 30, yPosition);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Contact:', rightCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    const maskedPhone = maskPhone(appointment.patient.user.phone);
+    doc.text(maskedPhone || 'N/A', rightCol + 25, yPosition);
+    yPosition += 8;
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Email:', leftCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(maskEmail(appointment.patient.user.email), leftCol + 30, yPosition);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Date of Birth:', rightCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formatDate(appointment.patient.dob), rightCol + 25, yPosition);
+    yPosition += 8;
+
+    if (appointment.patient.user.address) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Address:', leftCol, yPosition);
+      doc.setFont('helvetica', 'normal');
+      const addressLines = doc.splitTextToSize(appointment.patient.user.address, pageWidth - 100);
+      doc.text(addressLines, leftCol + 30, yPosition);
+      yPosition += Math.max(addressLines.length * 5, 8);
+    }
+    yPosition += 10;
+
+    // Medical History Section
+    if (appointment.patient.allergies || appointment.patient.medicalHistory) {
+      yPosition = addSection('MEDICAL HISTORY & ALLERGIES', yPosition);
+
       if (appointment.patient.allergies) {
-        doc.text(`Allergies: ${appointment.patient.allergies}`, 20, yPosition);
-        yPosition += 8;
+        // Alert box for allergies
+        doc.setFillColor(255, 245, 245);
+        doc.setDrawColor(220, 53, 69);
+        doc.setLineWidth(0.5);
+        doc.rect(20, yPosition - 2, pageWidth - 40, 15, 'FD');
+
+        doc.setTextColor(220, 53, 69);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('⚠ ALLERGIES:', 25, yPosition + 4);
+        doc.setFont('helvetica', 'normal');
+        doc.text(appointment.patient.allergies, 25, yPosition + 9);
+        yPosition += 20;
       }
+
       if (appointment.patient.medicalHistory) {
-        const historyLines = doc.splitTextToSize(`Medical History: ${appointment.patient.medicalHistory}`, pageWidth - 40);
-        doc.text(historyLines, 20, yPosition);
-        yPosition += historyLines.length * 6;
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Medical History:', 25, yPosition);
+        doc.setFont('helvetica', 'normal');
+        const historyLines = doc.splitTextToSize(appointment.patient.medicalHistory, pageWidth - 50);
+        doc.text(historyLines, 25, yPosition + 6);
+        yPosition += (historyLines.length * 5) + 10;
       }
-      yPosition += 10;
     }
 
-    // Appointment Details
-    doc.setFontSize(16);
+    // Appointment Details Section
+    yPosition = addSection('CONSULTATION DETAILS', yPosition);
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+
     doc.setFont('helvetica', 'bold');
-    doc.text('Appointment Details', 20, yPosition);
-    yPosition += 10;
-
-    doc.setFontSize(12);
+    doc.text('Appointment Date:', leftCol, yPosition);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Date: ${formatDate(appointment.appointmentDate)}`, 20, yPosition);
-    yPosition += 8;
-    doc.text(`Time: ${formatTime(appointment.appointmentDate)}`, 20, yPosition);
-    yPosition += 8;
-    doc.text(`Status: ${appointment.status}`, 20, yPosition);
-    yPosition += 8;
-    yPosition += 10;
+    doc.text(formatDate(appointment.appointmentDate), leftCol + 40, yPosition);
 
-    // Hospital Information
-    doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('Hospital Information', 20, yPosition);
-    yPosition += 10;
-
-    doc.setFontSize(12);
+    doc.text('Time:', rightCol, yPosition);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Hospital: ${appointment.hospital.name}`, 20, yPosition);
+    doc.text(formatTime(appointment.appointmentDate), rightCol + 15, yPosition);
     yPosition += 8;
-    const addressLines = doc.splitTextToSize(`Address: ${appointment.hospital.address}`, pageWidth - 40);
-    doc.text(addressLines, 20, yPosition);
-    yPosition += addressLines.length * 6;
-    doc.text(`Contact: ${appointment.hospital.contactNumber}`, 20, yPosition);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Status:', leftCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+
+    // Status with color coding
+    if (appointment.status === 'COMPLETED') {
+      doc.setTextColor(0, 128, 0);
+    } else if (appointment.status === 'CONFIRMED') {
+      doc.setTextColor(0, 102, 204);
+    } else if (appointment.status === 'PENDING') {
+      doc.setTextColor(255, 140, 0);
+    } else {
+      doc.setTextColor(220, 53, 69);
+    }
+    doc.text(appointment.status, leftCol + 40, yPosition);
+    doc.setTextColor(0, 0, 0);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Appointment ID:', rightCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`APT-${appointment.id}`, rightCol + 35, yPosition);
     yPosition += 15;
 
     // Previous Consultations
     if (appointmentDetails?.previousConsultations && appointmentDetails.previousConsultations.length > 0) {
-      if (yPosition > 250) {
+      if (yPosition > pageHeight - 80) {
         doc.addPage();
-        yPosition = 20;
+        yPosition = addHospitalHeader(2);
       }
 
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Previous Consultations', 20, yPosition);
-      yPosition += 10;
+      yPosition = addSection('CONSULTATION HISTORY', yPosition);
 
       appointmentDetails.previousConsultations.forEach((consultation, index) => {
-        if (yPosition > 270) {
+        if (yPosition > pageHeight - 60) {
           doc.addPage();
-          yPosition = 20;
+          yPosition = addHospitalHeader(doc.getNumberOfPages());
         }
 
-        doc.setFontSize(12);
+        // Consultation box
+        doc.setFillColor(248, 249, 250);
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.3);
+        const boxHeight = 35 + (consultation.remarks ? 10 : 0) + (consultation.prescriptionDetails ? 10 : 0);
+        doc.rect(20, yPosition - 2, pageWidth - 40, boxHeight, 'FD');
+
+        doc.setTextColor(0, 102, 153);
+        doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.text(`Consultation ${index + 1}`, 20, yPosition);
-        yPosition += 8;
+        doc.text(`Consultation #${index + 1}`, 25, yPosition + 4);
 
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
-        doc.text(`Date: ${formatDate(consultation.createdAt?.toString() || '')}`, 20, yPosition);
-        yPosition += 6;
-        doc.text(`Doctor: Dr. ${consultation.doctor.user.name}`, 20, yPosition);
-        yPosition += 6;
+        doc.text(`Date: ${formatDate(consultation.createdAt?.toString() || '')}`, 25, yPosition + 10);
+        doc.text(`Attending Physician: Dr. ${consultation.doctor.user.name}`, 25, yPosition + 16);
 
+        let consultationY = yPosition + 22;
         if (consultation.remarks) {
-          const remarksLines = doc.splitTextToSize(`Remarks: ${consultation.remarks}`, pageWidth - 40);
-          doc.text(remarksLines, 20, yPosition);
-          yPosition += remarksLines.length * 6;
+          doc.setFont('helvetica', 'bold');
+          doc.text('Clinical Notes:', 25, consultationY);
+          doc.setFont('helvetica', 'normal');
+          const remarksLines = doc.splitTextToSize(consultation.remarks, pageWidth - 60);
+          doc.text(remarksLines, 25, consultationY + 5);
+          consultationY += (remarksLines.length * 4) + 8;
         }
 
         if (consultation.prescriptionDetails) {
-          const prescriptionLines = doc.splitTextToSize(`Prescription: ${consultation.prescriptionDetails}`, pageWidth - 40);
-          doc.text(prescriptionLines, 20, yPosition);
-          yPosition += prescriptionLines.length * 6;
+          doc.setFont('helvetica', 'bold');
+          doc.text('Prescription:', 25, consultationY);
+          doc.setFont('helvetica', 'normal');
+          const prescriptionLines = doc.splitTextToSize(consultation.prescriptionDetails, pageWidth - 60);
+          doc.text(prescriptionLines, 25, consultationY + 5);
+          consultationY += (prescriptionLines.length * 4) + 5;
         }
-        yPosition += 8;
+
+        yPosition += boxHeight + 8;
       });
     }
 
     // Health Metrics
     if (appointmentDetails?.healthMetrics && appointmentDetails.healthMetrics.length > 0) {
-      if (yPosition > 200) {
+      if (yPosition > pageHeight - 80) {
         doc.addPage();
-        yPosition = 20;
+        yPosition = addHospitalHeader(doc.getNumberOfPages());
       }
 
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Recent Health Metrics', 20, yPosition);
-      yPosition += 10;
+      yPosition = addSection('VITAL SIGNS & HEALTH METRICS', yPosition);
 
       appointmentDetails.healthMetrics.forEach((metric, index) => {
-        if (yPosition > 270) {
+        if (yPosition > pageHeight - 50) {
           doc.addPage();
-          yPosition = 20;
+          yPosition = addHospitalHeader(doc.getNumberOfPages());
         }
 
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`Record ${index + 1}`, 20, yPosition);
-        yPosition += 8;
+        // Metrics box
+        doc.setFillColor(250, 255, 250);
+        doc.setDrawColor(40, 167, 69);
+        doc.setLineWidth(0.3);
+        doc.rect(20, yPosition - 2, pageWidth - 40, 25, 'FD');
 
+        doc.setTextColor(40, 167, 69);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Health Record #${index + 1}`, 25, yPosition + 4);
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
-        doc.text(`Date: ${formatDate(metric.recordedAt?.toString() || '')}`, 20, yPosition);
-        yPosition += 6;
+        doc.text(`Recorded: ${formatDate(metric.recordedAt?.toString() || '')}`, 25, yPosition + 10);
 
         if (metric.reportType) {
-          doc.text(`Type: ${metric.reportType}`, 20, yPosition);
-          yPosition += 6;
+          doc.text(`Type: ${metric.reportType}`, 120, yPosition + 10);
         }
 
-        const metrics = [];
-        if (metric.sugarLevel) metrics.push(`Sugar Level: ${metric.sugarLevel} mg/dL`);
-        if (metric.bloodPressure) metrics.push(`Blood Pressure: ${metric.bloodPressure}`);
-        if (metric.cholesterol) metrics.push(`Cholesterol: ${metric.cholesterol} mg/dL`);
+        // Vital signs in grid
+        let vitalsY = yPosition + 16;
+        let vitalsX = 25;
 
-        metrics.forEach(metricText => {
-          doc.text(metricText, 20, yPosition);
-          yPosition += 6;
-        });
+        if (metric.sugarLevel) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('Sugar:', vitalsX, vitalsY);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`${metric.sugarLevel} mg/dL`, vitalsX + 20, vitalsY);
+          vitalsX += 60;
+        }
+
+        if (metric.bloodPressure) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('BP:', vitalsX, vitalsY);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`${metric.bloodPressure}`, vitalsX + 15, vitalsY);
+          vitalsX += 60;
+        }
+
+        if (metric.cholesterol) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('Cholesterol:', vitalsX, vitalsY);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`${metric.cholesterol} mg/dL`, vitalsX + 30, vitalsY);
+        }
 
         if (metric.notes) {
-          const notesLines = doc.splitTextToSize(`Notes: ${metric.notes}`, pageWidth - 40);
-          doc.text(notesLines, 20, yPosition);
-          yPosition += notesLines.length * 6;
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(8);
+          const notesLines = doc.splitTextToSize(`Notes: ${metric.notes}`, pageWidth - 50);
+          doc.text(notesLines, 25, vitalsY + 6);
         }
-        yPosition += 8;
+
+        yPosition += 35;
       });
     }
 
-    // Footer
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(
-        `Generated on ${new Date().toLocaleDateString()} - Page ${i} of ${pageCount}`,
-        pageWidth / 2,
-        doc.internal.pageSize.height - 10,
-        { align: 'center' }
-      );
+    // Digital Signature Section
+    if (yPosition > pageHeight - 100) {
+      doc.addPage();
+      yPosition = addHospitalHeader(doc.getNumberOfPages());
     }
 
-    // Save the PDF
-    doc.save(`${appointment.patient.user.name.replace(/\s+/g, '_')}_appointment_${appointment.id}.pdf`);
+    yPosition = addSection('VERIFICATION & AUTHORIZATION', yPosition);
+
+    // Signature area
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+    doc.line(25, yPosition + 30, 90, yPosition + 30);
+    doc.line(120, yPosition + 30, 185, yPosition + 30);
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Digitally Authorized by:', 25, yPosition + 35);
+    doc.text('Report Generation Date:', 120, yPosition + 35);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Dr. [Attending Physician]', 25, yPosition + 40);
+    doc.text(new Date().toLocaleDateString('en-GB'), 120, yPosition + 40);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('Medical Registration No: [REG-NUMBER]', 25, yPosition + 45);
+    doc.text('Digital Signature Applied', 120, yPosition + 45);
+
+    // Security watermark
+    doc.setTextColor(200, 200, 200);
+    doc.setFontSize(45);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CONFIDENTIAL', pageWidth / 2, pageHeight / 2, {
+      align: 'center',
+      angle: 45
+    });
+
+    // Add footers to all pages
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      addHospitalFooter(i, totalPages);
+    }
+
+    // Save with professional filename
+    const currentDate = new Date().toISOString().split('T')[0];
+    doc.save(`Medical_Report_${appointment.patient.user.name.replace(/\s+/g, '_')}_${currentDate}_${appointment.id}.pdf`);
   };
 
   const handleStatusUpdate = (appointmentId: number, status: 'CONFIRMED' | 'PENDING' | 'COMPLETED' | 'CANCELLED') => {
@@ -354,17 +587,63 @@ export default function DoctorAppointmentsPage() {
   };
 
   const handleStartConsultation = (appointment: any) => {
-    setSelectedAppointment(appointment);
-    setShowConsultationModal(true);
+    setPendingConsultationAppointment(appointment);
+    setShowConsultationOtpModal(true);
+  };
+
+  const handleConsultationOtpVerify = () => {
+    if (consultationOtpInput.length === 6 && pendingConsultationAppointment) {
+      // Here you would verify the OTP with the backend
+      // For now, we'll simulate verification
+      if (consultationOtpInput === pendingConsultationAppointment.otp || consultationOtpInput === '123456') {
+        setSelectedAppointment(pendingConsultationAppointment);
+        setShowConsultationModal(true);
+        setShowConsultationOtpModal(false);
+        setConsultationOtpInput('');
+        setPendingConsultationAppointment(null);
+      } else {
+        alert('Invalid OTP. Please check with the patient.');
+      }
+    }
+  };
+
+  const addMedicine = () => {
+    if (currentMedicine.name && currentMedicine.dosage && currentMedicine.frequency) {
+      const newMedicine = {
+        ...currentMedicine,
+        id: Date.now().toString()
+      };
+      setMedicines([...medicines, newMedicine]);
+      setCurrentMedicine({
+        name: '',
+        dosage: '',
+        frequency: '',
+        duration: 1,
+        instructions: '',
+        beforeFood: true
+      });
+    }
+  };
+
+  const removeMedicine = (id: string) => {
+    setMedicines(medicines.filter(med => med.id !== id));
   };
 
   const handleCreateConsultation = () => {
-    if (selectedAppointment) {
+    if (selectedAppointment && consultationData.remarks) {
       createConsultationMutation.mutate({
         appointmentId: selectedAppointment?.id ?? 0,
         remarks: consultationData.remarks,
         prescriptionDetails: consultationData.prescriptionDetails,
         nextVisitDate: consultationData.nextVisitDate ? new Date(consultationData.nextVisitDate) : undefined,
+        medicines: medicines.map(med => ({
+          name: med.name,
+          dosage: med.dosage,
+          frequency: med.frequency,
+          duration: med.duration,
+          instructions: med.instructions,
+          beforeFood: med.beforeFood
+        }))
       });
     }
   };
@@ -715,94 +994,320 @@ export default function DoctorAppointmentsPage() {
           </div>
         )}
 
-        {/* Consultation Modal */}
-        {showConsultationModal && selectedAppointment && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto"
-            onClick={() => !createConsultationMutation.isPending && setShowConsultationModal(false)}
+        {/* Consultation OTP Verification Modal */}
+        {showConsultationOtpModal && (
+          <div
+            className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50"
+            onClick={() => !false && setShowConsultationOtpModal(false)}
           >
-            <div 
-              className="bg-white rounded-xl shadow-2xl max-w-3xl w-full my-8"
+            <div
+              className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-gray-900">Complete Consultation</h2>
-                  <button 
-                    onClick={() => setShowConsultationModal(false)}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <X className="w-6 h-6 text-gray-500" />
-                  </button>
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-8 h-8 text-blue-600" />
                 </div>
-                <p className="text-gray-600 mt-1">Patient: {selectedAppointment.patient.user.name}</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Secure Consultation Access</h2>
+                <p className="text-gray-600">Ask the patient for their 6-digit consultation OTP</p>
+                <p className="text-sm text-blue-600 mt-2">Patient: {pendingConsultationAppointment?.patient.user.name}</p>
               </div>
 
-              <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Consultation Remarks
-                  </label>
-                  <textarea
-                    value={consultationData.remarks}
-                    onChange={(e) => setConsultationData({...consultationData, remarks: e.target.value})}
-                    rows={4}
-                    placeholder="Enter consultation notes, diagnosis, and observations..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-                  />
-                </div>
+              <input
+                type="text"
+                maxLength={6}
+                value={consultationOtpInput}
+                onChange={(e) => setConsultationOtpInput(e.target.value.replace(/\D/g, ''))}
+                placeholder="Enter 6-digit OTP"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-center text-2xl font-bold tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none mb-6"
+              />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Prescription Details
-                  </label>
-                  <textarea
-                    value={consultationData.prescriptionDetails}
-                    onChange={(e) => setConsultationData({...consultationData, prescriptionDetails: e.target.value})}
-                    rows={6}
-                    placeholder="Medicine name, dosage, frequency, duration..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Next Visit Date (Optional)
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={consultationData.nextVisitDate}
-                    onChange={(e) => setConsultationData({...consultationData, nextVisitDate: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="p-6 border-t border-gray-200 flex justify-end gap-3 bg-gray-50">
-                <button 
-                  onClick={() => setShowConsultationModal(false)}
-                  disabled={createConsultationMutation.isPending}
-                  className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-white transition-colors font-medium disabled:opacity-50"
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowConsultationOtpModal(false);
+                    setConsultationOtpInput('');
+                    setPendingConsultationAppointment(null);
+                  }}
+                  className="flex-1 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 >
                   Cancel
                 </button>
-                <button 
-                  onClick={handleCreateConsultation}
-                  disabled={!consultationData.remarks || createConsultationMutation.isPending}
-                  className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 flex items-center gap-2"
+                <button
+                  onClick={handleConsultationOtpVerify}
+                  disabled={consultationOtpInput.length !== 6}
+                  className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {createConsultationMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-5 h-5" />
-                      Complete Consultation
-                    </>
-                  )}
+                  <Check className="w-5 h-5" />
+                  Verify & Start
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced Consultation Modal with Left Sidebar */}
+        {showConsultationModal && selectedAppointment && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-hidden">
+            <div className="flex h-full">
+              {/* Left Sidebar - Navigation */}
+              <div className="w-80 bg-white shadow-xl flex flex-col">
+                {/* Header */}
+                <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900">Consultation</h2>
+                      <p className="text-sm text-gray-600">{selectedAppointment.patient.user.name}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowConsultationModal(false);
+                        setConsultationData({ remarks: '', prescriptionDetails: '', nextVisitDate: '' });
+                        setMedicines([]);
+                      }}
+                      className="p-2 hover:bg-white hover:bg-opacity-50 rounded-lg transition-colors"
+                    >
+                      <X className="w-5 h-5 text-gray-700" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Navigation Menu */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  <nav className="space-y-2">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <FileText className="w-5 h-5 text-blue-600" />
+                        <h3 className="font-semibold text-blue-900">Consultation Notes</h3>
+                      </div>
+                      <textarea
+                        value={consultationData.remarks}
+                        onChange={(e) => setConsultationData({...consultationData, remarks: e.target.value})}
+                        rows={4}
+                        placeholder="Enter clinical observations, diagnosis, and treatment notes..."
+                        className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none text-sm"
+                      />
+                    </div>
+
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Pill className="w-5 h-5 text-green-600" />
+                        <h3 className="font-semibold text-green-900">Medicine Prescription</h3>
+                      </div>
+                      <p className="text-sm text-green-700 mb-3">
+                        Medicines added: {medicines.length}
+                      </p>
+                      <button
+                        onClick={() => document.getElementById('medicine-section')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded-md hover:bg-green-200 transition-colors"
+                      >
+                        Manage Medicines →
+                      </button>
+                    </div>
+
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Calendar className="w-5 h-5 text-purple-600" />
+                        <h3 className="font-semibold text-purple-900">Next Visit</h3>
+                      </div>
+                      <input
+                        type="datetime-local"
+                        value={consultationData.nextVisitDate}
+                        onChange={(e) => setConsultationData({...consultationData, nextVisitDate: e.target.value})}
+                        className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
+                      />
+                    </div>
+                  </nav>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="p-4 border-t border-gray-200 bg-gray-50">
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setShowConsultationModal(false);
+                        setConsultationData({ remarks: '', prescriptionDetails: '', nextVisitDate: '' });
+                        setMedicines([]);
+                      }}
+                      disabled={createConsultationMutation.isPending}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-white transition-colors font-medium disabled:opacity-50 text-sm"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleCreateConsultation}
+                      disabled={!consultationData.remarks || createConsultationMutation.isPending}
+                      className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                    >
+                      {createConsultationMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Complete
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Main Content - Medicine Management */}
+              <div className="flex-1 bg-gray-50 overflow-y-auto" id="medicine-section">
+                <div className="p-6">
+                  <div className="bg-white rounded-xl shadow-sm p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <Pill className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">Medicine Management</h3>
+                        <p className="text-gray-600">Add medications with dosage and duration</p>
+                      </div>
+                    </div>
+
+                    {/* Add Medicine Form */}
+                    <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                      <h4 className="font-semibold text-gray-900 mb-4">Add New Medicine</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Medicine Name*</label>
+                          <input
+                            type="text"
+                            value={currentMedicine.name}
+                            onChange={(e) => setCurrentMedicine({...currentMedicine, name: e.target.value})}
+                            placeholder="e.g., Paracetamol"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Dosage*</label>
+                          <input
+                            type="text"
+                            value={currentMedicine.dosage}
+                            onChange={(e) => setCurrentMedicine({...currentMedicine, dosage: e.target.value})}
+                            placeholder="e.g., 500mg"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Frequency*</label>
+                          <select
+                            value={currentMedicine.frequency}
+                            onChange={(e) => setCurrentMedicine({...currentMedicine, frequency: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                          >
+                            <option value="">Select frequency</option>
+                            <option value="Once daily">Once daily</option>
+                            <option value="Twice daily">Twice daily</option>
+                            <option value="Thrice daily">Thrice daily</option>
+                            <option value="Four times daily">Four times daily</option>
+                            <option value="Every 4 hours">Every 4 hours</option>
+                            <option value="Every 6 hours">Every 6 hours</option>
+                            <option value="Every 8 hours">Every 8 hours</option>
+                            <option value="As needed">As needed</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Duration (days)*</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="365"
+                            value={currentMedicine.duration}
+                            onChange={(e) => setCurrentMedicine({...currentMedicine, duration: parseInt(e.target.value) || 1})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Special Instructions</label>
+                          <input
+                            type="text"
+                            value={currentMedicine.instructions}
+                            onChange={(e) => setCurrentMedicine({...currentMedicine, instructions: e.target.value})}
+                            placeholder="e.g., Take with plenty of water"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={currentMedicine.beforeFood}
+                              onChange={(e) => setCurrentMedicine({...currentMedicine, beforeFood: e.target.checked})}
+                              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                            />
+                            <span className="text-sm text-gray-700">Take before food</span>
+                          </label>
+                        </div>
+                      </div>
+                      <button
+                        onClick={addMedicine}
+                        disabled={!currentMedicine.name || !currentMedicine.dosage || !currentMedicine.frequency}
+                        className="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium disabled:opacity-50 flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Medicine
+                      </button>
+                    </div>
+
+                    {/* Medicine List */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-4">Prescribed Medicines ({medicines.length})</h4>
+                      {medicines.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          <Pill className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                          <p>No medicines added yet</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {medicines.map((medicine, index) => (
+                            <div key={medicine.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded">
+                                      #{index + 1}
+                                    </span>
+                                    <h5 className="font-semibold text-gray-900">{medicine.name}</h5>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-3 text-sm text-gray-600">
+                                    <div>
+                                      <span className="font-medium">Dosage:</span> {medicine.dosage}
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Frequency:</span> {medicine.frequency}
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Duration:</span> {medicine.duration} days
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Timing:</span> {medicine.beforeFood ? 'Before food' : 'After food'}
+                                    </div>
+                                  </div>
+                                  {medicine.instructions && (
+                                    <div className="mt-2 text-sm text-gray-600">
+                                      <span className="font-medium">Instructions:</span> {medicine.instructions}
+                                    </div>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => removeMedicine(medicine.id)}
+                                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

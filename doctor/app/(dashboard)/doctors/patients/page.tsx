@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Search, Filter, Users, Phone, Mail, Calendar, 
   ChevronLeft, ChevronRight, User, Activity, 
@@ -67,7 +67,6 @@ const PatientsListPage = () => {
     }
     return '*'.repeat(phone.length - 4) + phone.slice(-4);
   };
-
   // Toggle field visibility
 //   const toggleFieldVisibility = (field:string, patientId:number ) => {
 //     setRevealedFields(prev => ({

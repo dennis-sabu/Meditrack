@@ -20,7 +20,7 @@ declare module "next-auth" {
     email: string;
     image: string | null;
     phone: string | null;
-    role: "ADMIN" | "HOSPITAL_ADMIN" | "DOCTOR";
+    role: "ADMIN" | "HOSPITAL" | "DOCTOR";
     loginType: "Credentials";
     isVerified: boolean;
     governmentId: string | null;
@@ -68,10 +68,10 @@ export const authOptions: NextAuthOptions = {
         if (user.role == 'ADMIN') {
           return user as unknown as User;
         }
-        // Allow only ADMIN, HOSPITAL_ADMIN, and DOCTOR
+        // Allow only ADMIN, HOSPITAL, and DOCTOR
         if (
           user.role !== "ADMIN" &&
-          user.role !== "HOSPITAL_ADMIN" &&
+          user.role !== "HOSPITAL" &&
           user.role !== "DOCTOR"
         ) {
           throw new Error("Access restricted to verified staff only");
@@ -80,7 +80,7 @@ export const authOptions: NextAuthOptions = {
         return user as unknown as User;
 
         // ADMIN always allowed
-        // HOSPITAL_ADMIN & DOCTOR must be verified
+        // HOSPITAL & DOCTOR must be verified
         // if (!user.isVerified) {
         //   throw new Error(`Account not verified by Super Admin - ${user.name+user.isActive,user.isVerified}`, { cause: "UNVERIFIED" });
         // }

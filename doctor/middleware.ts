@@ -34,7 +34,7 @@ export async function middleware(request: NextRequest) {
   // Role-based route protection
   const roleRouteMap = {
     ADMIN: ['/admin/dashboard'],
-    HOSPITAL_ADMIN: ['/hospitals','/hospitals/dashboard'],
+    HOSPITAL: ['/hospitals','/hospitals/dashboard'],
     DOCTOR: ['/doctors','/doctors/dashboard'],
   };
 
@@ -60,7 +60,7 @@ export async function middleware(request: NextRequest) {
       case 'ADMIN':
         redirectPath = '/admin/dashboard';
         break;
-      case 'HOSPITAL_ADMIN':
+      case 'HOSPITAL':
         redirectPath = '/hospitals/dashboard';
         break;
       case 'DOCTOR':

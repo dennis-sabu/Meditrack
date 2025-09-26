@@ -129,6 +129,19 @@ export const doctorAvailability = pgTable("doctor_availability", {
 //
 // APPOINTMENTS
 //
+// Create a new table for hospital join requests
+export const hospitalJoinRequests = pgTable("hospital_join_requests", {
+  id: serial("id").primaryKey(),
+  doctorId: integer("doctor_id").references(() => doctors.id).notNull(),
+  hospitalId: integer("hospital_id").references(() => hospitals.id).notNull(),
+  department: varchar("department", { length: 100 }).notNull(),
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, approved, rejected
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  respondedBy: integer("responded_by").references(() => users.id),
+  respondedAt: timestamp("responded_at"),
+});
+
 export const appointments = pgTable("appointments", {
   id: serial("id").primaryKey(),
   patientId: integer("patient_id").references(() => patients.id).notNull(),
@@ -306,4 +319,10 @@ export const razorpayOrdersRelations = relations(razorpayOrdersTable, ({ one }) 
 export const videoBookRequestsRelations = relations(videoBookRequests, ({ one }) => ({
   user: one(users, { fields: [videoBookRequests.userId], references: [users.id] }),
   doctor: one(doctors, { fields: [videoBookRequests.doctorId], references: [doctors.id] }),
+}));
+
+export const hospitalJoinRequestsRelations = relations(hospitalJoinRequests, ({ one }) => ({
+  doctor: one(doctors, { fields: [hospitalJoinRequests.doctorId], references: [doctors.id] }),
+  hospital: one(hospitals, { fields: [hospitalJoinRequests.hospitalId], references: [hospitals.id] }),
+  respondedByUser: one(users, { fields: [hospitalJoinRequests.respondedBy], references: [users.id] }),
 }));

@@ -99,7 +99,7 @@ export default function AuthPage() {
           const role = session?.data?.user?.role.toLowerCase();
           window.location.href = `/${role}/dashboard`;
         }
-        if(session?.data?.user?.role === "HOSPITAL_ADMIN"){
+        if(session?.data?.user?.role === "HOSPITAL"){
           window.location.href = `/hospitals/dashboard`;
         }
         if(session?.data?.user?.role === "DOCTOR"){

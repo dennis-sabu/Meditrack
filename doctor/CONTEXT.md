@@ -44,7 +44,7 @@ Core Features & Flow
 
 Auth & Roles:
 Email/password or OAuth (JWT-based sessions).
-Role-based access (ADMIN, HOSPITAL_ADMIN, DOCTOR, PATIENT).
+Role-based access (ADMIN, HOSPITAL, DOCTOR, PATIENT).
 
 Appointments:
 Patient requests → Doctor confirms/cancels → Patient notified.
