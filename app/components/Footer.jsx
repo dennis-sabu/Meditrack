@@ -156,34 +156,9 @@ export default function FaqWithFooter() {
           {/* Contact / Social */}
           <div 
           id="contact"
-          className="flex flex-col items-start gap-4">
-            <form
-              action="mailto:contact@medilink.com"
-              method="GET"
-              className="flex gap-2"
-            >
-              <input
-                type="hidden"
-                name="subject"
-                value="Medilink Contact Request"
-              />
-              <input
-                type="email"
-                name="body"
-                required
-                placeholder="Your email"
-                className="px-3 py-2 rounded-md bg-green-100 text-black text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                aria-label="Your email"
-              />
-              <button
-                type="submit"
-                className="bg-green-600 hover:bg-green-700 transition text-white px-4 py-2 rounded-md text-sm"
-              >
-                Send
-              </button>
-            </form>
-
+          className="flex flex-col items-start gap-2">
             
+     
           </div>
           </div>
         {/* Bottom Section */}

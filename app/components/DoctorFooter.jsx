@@ -18,71 +18,10 @@ export default function DoctorFooter() {
               className="object-contain"
               loading="lazy"
             />
-            <span className="font-bold text-xl">Meditrack</span>
-          </div>
-
-          {/* Nav Links */}
-          <nav className="flex gap-6 text-sm text-white-700">
-            <a
-              className="hover:text-green-500 transition"
-              href="/"
-            >
-              Home
-            </a>
-            <a
-              className="hover:text-green-500 transition"
-              href="#"
-            >
-              How it works
-            </a>
-            <a 
-              className="hover:text-green-500 transition"
-              href="/doctors"
-            >
-              For doctors
-            </a>
-            <a 
-              className="hover:text-green-500 transition"
-              href="/patients"
-            >
-              For patients
-            </a>
-          </nav>
-
-          {/* Contact / Social */}
-          <div 
-            id="contact"
-            className="flex flex-col items-start gap-4"
-          >
-            <form
-              action="mailto:contact@meditrack.com"
-              method="GET"
-              className="flex gap-2"
-            >
-              <input
-                type="hidden"
-                name="subject"
-                value="Meditrack Contact Request"
-              />
-              <input
-                type="email"
-                name="body"
-                required
-                placeholder="Your email"
-                className="px-3 py-2 rounded-md bg-green-100 text-black text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                aria-label="Your email"
-              />
-              <button
-                type="submit"
-                className="bg-green-600 hover:bg-green-700 transition text-white px-4 py-2 rounded-md text-sm"
-              >
-                Send
-              </button>
-            </form>
-          </div>
+          <span className="font-bold text-xl">Meditrack</span>
         </div>
-        
-        {/* Bottom Section */}
+
+          </div>
         <div className="border-t mt-6 pt-4 pb-4 text-sm text-gray-400 max-w-7xl mx-auto px-6">
           {/* Copyright and Links Row */}
           <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
