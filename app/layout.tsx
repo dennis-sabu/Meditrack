@@ -3,10 +3,11 @@ import "./globals.css";
 import { Figtree } from "next/font/google";
 // import { TRPCReactProvider } from "@/utils/react";
 import { Toaster } from "sonner";
+import { TRPCReactProvider } from "@/utils/react";
 
 const geistSans = Figtree({
   // variable: "--font-geist-sans",
-  weight: ["300","400", "500", "600", "700","800",'900'],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
   subsets: ["latin"],
 });
 
@@ -22,11 +23,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.className} antialiased`}
-      >
-            {children}
-            <Toaster />
+      <body className={`${geistSans.className} antialiased`}>
+        <TRPCReactProvider>
+          {children}
+          <Toaster />
+        </TRPCReactProvider>
       </body>
     </html>
   );
