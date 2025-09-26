@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Figtree } from "next/font/google";
-import { TRPCReactProvider } from "@/utils/react";
+// import { TRPCReactProvider } from "@/utils/react";
 import { Toaster } from "sonner";
 
 const geistSans = Figtree({
@@ -25,10 +25,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.className} antialiased`}
       >
-        <TRPCReactProvider >
             {children}
             <Toaster />
-        </TRPCReactProvider>
       </body>
     </html>
   );

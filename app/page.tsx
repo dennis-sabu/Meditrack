@@ -9,8 +9,6 @@ import {
   UserCheck,
   Shield,
   Clock,
-  Heart,
-  Users,
   Calendar,
   FileText,
   Phone
