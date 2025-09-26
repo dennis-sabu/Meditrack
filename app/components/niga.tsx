@@ -65,15 +65,12 @@ export default function HeroGradient() {
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
               className="px-4 sm:px-6 py-2 sm:py-3 bg-green-400 text-green-900 text-sm sm:text-base font-medium rounded-full shadow hover:bg-green-300 transition"
             >
-              Book A Demo
-            </motion.button>
-
-            <motion.button
-              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-              className="px-4 sm:px-6 py-2 sm:py-3 border border-white text-white text-sm sm:text-base rounded-full hover:bg-white hover:text-green-700 transition"
-            >
               Learn More
             </motion.button>
+
+            
+              
+           
           </motion.div>
         </motion.div>
       </div>

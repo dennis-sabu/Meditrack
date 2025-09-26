@@ -160,7 +160,7 @@ export default function Navbar() {
             Log In
           </Link>
           <Link
-            href="/get-started"
+            href="/auth"
             className="px-5 py-2 rounded-full bg-green-500 text-white 
             hover:bg-green-600 transition active:scale-95"
           >
@@ -233,7 +233,7 @@ export default function Navbar() {
               Log In
             </Link>
             <Link
-              href="/get-started"
+              href="/auth"
               onClick={closeMobileMenu}
               ref={(el) => {
                 if (el) linksRef.current[6] = el;
