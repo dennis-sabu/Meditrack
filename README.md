@@ -1,4 +1,7 @@
 # MediTrack — Hackathon Project
+Live deployment link for User: https://imedtrack.in
+Deployment link for Hospital Admin/ Doctor: https://admin.imedtrack.in
+
 
 A secure health-management and personalized medicine tracking platform built during a hackathon.  
 It helps users, doctors, and administrators manage prescriptions, medication schedules, and patient history.  
