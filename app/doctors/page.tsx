@@ -125,7 +125,7 @@ export default function ForDoctorsPage() {
   const handleDoctorLogin = () => {
     setIsLoading(true);
     setTimeout(() => {
-      window.open("https://example.com", "_blank", "noopener,noreferrer");
+      window.open("https://admin.imedtrack.in", "_blank", "noopener,noreferrer");
       setIsLoading(false);
     }, 1000);
   };
@@ -230,11 +230,11 @@ export default function ForDoctorsPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {doctorBenefits.map((benefit, index) => (
-              <motion.div
+                <motion.div
                 key={index}
                 whileHover={{ scale: 1.05, y: -6 }}
-                className="benefit-card bg-gray-50 p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300"
-              >
+                className="benefit-card bg-gray-50 p-8 rounded-2xl shadow-[0_4px_12px_rgba(34,197,94,0.25)] hover:shadow-[0_8px_28px_rgba(34,197,94,0.35)] transition-all duration-300"
+                >
                 <div className="mb-4">{benefit.icon}</div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
                   {benefit.title}
@@ -242,7 +242,7 @@ export default function ForDoctorsPage() {
                 <p className="text-gray-600 leading-relaxed">
                   {benefit.description}
                 </p>
-              </motion.div>
+                </motion.div>
             ))}
           </div>
         </div>

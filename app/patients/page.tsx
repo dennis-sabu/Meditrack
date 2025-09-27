@@ -159,13 +159,13 @@ export default function ForPatientsPage() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
-              className="absolute -top-4 -right-4 bg-white p-4 rounded-xl shadow-lg border"
+              className="absolute -top-4 -right-4 bg-white p-4 rounded-xl shadow-lg shadow-green-500/40 border border-green-200"
             >
               <div className="flex items-center space-x-2">
-                <HiShieldCheck className="w-6 h-6 text-green-600" />
-                <span className="font-semibold text-gray-800">
-                  Secure & Private
-                </span>
+              <HiShieldCheck className="w-6 h-6 text-green-600" />
+              <span className="font-semibold text-gray-800">
+                Secure & Private
+              </span>
               </div>
             </motion.div>
           </motion.div>

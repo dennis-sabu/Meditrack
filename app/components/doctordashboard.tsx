@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
