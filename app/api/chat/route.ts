@@ -23,44 +23,24 @@ export async function POST(req: Request) {
     // 1. "What can I do as a Patient?"
     if (lowerMessage.includes('what can i do as a patient') || 
         (lowerMessage.includes('what can i do') && lowerMessage.includes('patient'))) {
-      const patientCapabilitiesResponse = `## 👤 **What You Can Do as a Patient in Meditrack**
+      const patientCapabilitiesResponse = `<strong>👤 What You Can Do as a Patient in Meditrack</strong><br/><br/>
 
-**Your Complete Healthcare Management Tools:**
+<strong>🏥 Account & Profile:</strong><br/>
+Create and manage your healthcare profile, update medical history, control privacy settings, and view who accessed your records.<br/><br/>
 
-**🏥 Account & Profile Management:**
-- ✅ **Create Personal Account** - Register and manage your healthcare profile
-- ✅ **Update Medical History** - Add allergies, conditions, and emergency contacts
-- ✅ **Manage Privacy Settings** - Control who can access your information
-- ✅ **View Access Logs** - See who viewed your medical records and when
+<strong>📅 Appointments:</strong><br/>
+Browse doctors by specialization and location, book appointments, reschedule or cancel visits, get reminders, and connect via video consultations.<br/><br/>
 
-**📅 Appointment Management:**
-- ✅ **Browse Available Doctors** - Search by specialization, location, ratings
-- ✅ **Book Appointments** - Schedule consultations at your convenience  
-- ✅ **Reschedule/Cancel** - Modify appointments as needed
-- ✅ **Appointment Reminders** - Get notified before your scheduled visits
-- ✅ **Video Consultations** - Connect with doctors remotely
+<strong>💊 Medications:</strong><br/>
+View all prescriptions, set medication reminders, upload proof of intake with photos/videos, track adherence, and receive drug interaction alerts.<br/><br/>
 
-**💊 Medication & Prescription Management:**
-- ✅ **View Prescriptions** - Access all your current and past medications
-- ✅ **Medication Reminders** - Never miss a dose with smart notifications
-- ✅ **Upload Intake Proof** - Take photos/videos showing you took your medicine
-- ✅ **Track Adherence** - Monitor your medication compliance over time
-- ✅ **Drug Interaction Alerts** - Get warnings about medication conflicts
+<strong>📋 Health Records:</strong><br/>
+Access complete digital health records, share records with doctors, export your data, view lab results, and follow treatment plans.<br/><br/>
 
-**📋 Health Records & Data:**
-- ✅ **Digital Health Records** - Complete medical history in one place
-- ✅ **Share Records** - Grant temporary access to new doctors
-- ✅ **Export Data** - Download your medical information anytime
-- ✅ **Lab Results** - View test results and reports
-- ✅ **Treatment Plans** - Access your ongoing care instructions
+<strong>🔒 Privacy & Security:</strong><br/>
+Secure OTP verification, manage doctor access permissions, encrypted data protection, and emergency access protocols.<br/><br/>
 
-**🔒 Privacy & Security Controls:**
-- ✅ **OTP Verification** - Secure access with one-time passwords
-- ✅ **Consent Management** - Approve/deny doctor access requests
-- ✅ **Data Encryption** - Your information is always protected
-- ✅ **Emergency Access** - Critical info available for emergencies
-
-*As a patient, you have complete control over your healthcare journey with Meditrack's comprehensive tools and security features!*`;
+<em>You have complete control over your healthcare journey! 🎯</em>`;
 
       return new Response(JSON.stringify({ text: patientCapabilitiesResponse }), {
         status: 200,
@@ -71,56 +51,21 @@ export async function POST(req: Request) {
     // 2. "How to book appointments?"
     if (lowerMessage.includes('how to book appointments') || 
         (lowerMessage.includes('book') && lowerMessage.includes('appointment'))) {
-      const appointmentBookingResponse = `## 📅 **How to Book Appointments - Step by Step**
+      const appointmentBookingResponse = `<strong>📅 How to Book Appointments</strong><br/><br/>
 
-**Simple Appointment Booking Process:**
+<strong>Step 1 - Login:</strong> Open Meditrack and complete OTP verification.<br/><br/>
 
-**🔹 Step 1: Login to Your Account**
-- Open Meditrack app or website
-- Enter your credentials (email/phone + password)
-- Complete OTP verification if required
+<strong>Step 2 - Find Doctor:</strong> Search by specialization, name, location, or ratings. Filter by fees and available slots.<br/><br/>
 
-**🔹 Step 2: Find Your Doctor**
-- Click "Book Appointment" or "Find Doctors"
-- **Search Options:**
-  - By Specialization (Cardiology, Pediatrics, etc.)
-  - By Doctor Name
-  - By Location/Hospital
-  - By Available Dates
-- **Filter Results:**
-  - Doctor ratings and reviews
-  - Consultation fees
-  - Available time slots
+<strong>Step 3 - Choose Type:</strong> Select in-person 🏥, video call 💻, or phone consultation 📞. Pick your preferred date and time.<br/><br/>
 
-**🔹 Step 3: Select Appointment Details**
-- Choose your preferred doctor
-- Select appointment type:
-  - 🏥 **In-Person Consultation**
-  - 💻 **Video Call Consultation**
-  - 📞 **Phone Consultation**
-- Pick available date and time
-- Add reason for visit (optional)
+<strong>Step 4 - Confirm:</strong> Review details, confirm fees, add payment method, and submit request.<br/><br/>
 
-**🔹 Step 4: Confirm Booking**
-- Review appointment details
-- Confirm consultation fee
-- Add payment method if required
-- Submit appointment request
+<strong>Step 5 - Get Approved:</strong> Doctor reviews and you receive approval ✅, alternative time 🔄, or cancellation notice ❌.<br/><br/>
 
-**🔹 Step 5: Wait for Doctor Approval**
-- Doctor reviews your request
-- You receive notification of:
-  - ✅ **Approval** - Appointment confirmed
-  - 🔄 **Alternative Time** - Doctor suggests different slot
-  - ❌ **Cancellation** - With reason provided
+<strong>Step 6 - Confirmation:</strong> Receive email/SMS confirmation, calendar invite, reminders, and video link if applicable.<br/><br/>
 
-**🔹 Step 6: Receive Confirmation**
-- Email/SMS confirmation sent
-- Calendar invitation added
-- Reminder notifications scheduled
-- Video call link sent (if applicable)
-
-*Booking appointments is quick, easy, and gives you complete control over your healthcare schedule!*`;
+<em>Quick, easy scheduling at your fingertips! 🎯</em>`;
 
       return new Response(JSON.stringify({ text: appointmentBookingResponse }), {
         status: 200,
@@ -132,53 +77,26 @@ export async function POST(req: Request) {
     if (lowerMessage.includes('how does medicine tracking work') || 
         lowerMessage.includes('medicine tracking') ||
         (lowerMessage.includes('medicine') && lowerMessage.includes('tracking'))) {
-      const medicineTrackingResponse = `## 💊 **How Medicine Tracking Works in Meditrack**
+      const medicineTrackingResponse = `<strong>💊 How Medicine Tracking Works</strong><br/><br/>
 
-**Complete Medication Management System:**
+<strong>Prescription:</strong> Doctor creates digital prescription with dosage, frequency, and instructions.<br/><br/>
 
-**🔹 Step 1: Doctor Prescribes Medication**
-- Doctor creates digital prescription
-- Includes medication name, dosage, frequency
-- Sets food restrictions and special instructions
-- Specifies treatment duration
+<strong>Smart Reminders:</strong> Automatic alerts via push, email, or SMS at prescribed times based on your routine.<br/><br/>
 
-**🔹 Step 2: Automatic Reminder Setup**
-- System creates personalized reminder schedule
-- Notifications sent at prescribed times
-- Multiple alert methods (push, email, SMS)
-- Smart timing based on your daily routine
+<strong>Take & Verify:</strong> Follow instructions and capture photo 📸 or video 🎥 proof of intake with automatic timestamps.<br/><br/>
 
-**🔹 Step 3: Take Your Medicine**
-- Follow prescribed dosage and timing
-- Take with/without food as instructed
-- Use camera to capture proof of intake
+<strong>Doctor Review:</strong> Healthcare providers monitor your adherence statistics and uploaded proof to verify compliance.<br/><br/>
 
-**🔹 Step 4: Upload Verification Proof**
-- 📸 **Photo Evidence** - Picture of you taking medication
-- 🎥 **Video Proof** - Short video showing intake
-- ⏰ **Automatic Timestamps** - Date/time recorded
-- 📍 **Location Data** - Optional location verification
+<strong>Progress Tracking:</strong> Monitor adherence over time, track health improvements, and adjust treatment based on real data.<br/><br/>
 
-**🔹 Step 5: Doctor Reviews Compliance**
-- Doctors see your adherence statistics
-- Review uploaded proof of intake
-- Verify you're following treatment plan
-- Provide feedback and adjustments
+<strong>Smart Features:</strong><br/>
+✅ Missed dose alerts with follow-ups<br/>
+✅ Drug interaction warnings<br/>
+✅ Refill reminders<br/>
+✅ Side effect tracking<br/>
+✅ Shareable progress reports<br/><br/>
 
-**🔹 Step 6: Progress Tracking**
-- Monitor adherence over time
-- Track improvement in health outcomes
-- Share compliance data with healthcare team
-- Adjust treatment based on real data
-
-**📊 Smart Features:**
-- ✅ **Missed Dose Alerts** - Follow-up notifications
-- ✅ **Drug Interaction Warnings** - Safety alerts
-- ✅ **Refill Reminders** - Never run out of medicine
-- ✅ **Side Effect Tracking** - Monitor reactions
-- ✅ **Progress Reports** - Share with doctors
-
-*Medicine tracking ensures better health outcomes through verified adherence and data-driven treatment adjustments!*`;
+<em>Better outcomes through verified adherence! 📊</em>`;
 
       return new Response(JSON.stringify({ text: medicineTrackingResponse }), {
         status: 200,
@@ -190,54 +108,28 @@ export async function POST(req: Request) {
     if (lowerMessage.includes('is my medical data secure') || 
         lowerMessage.includes('medical data secure') ||
         (lowerMessage.includes('medical') && lowerMessage.includes('secure'))) {
-      const dataSecurityResponse = `## 🔒 **Your Medical Data is Completely Secure in Meditrack**
+      const dataSecurityResponse = `<strong>🔒 Your Medical Data is Completely Secure</strong><br/><br/>
 
-**Military-Grade Security Protection:**
+<strong>🛡️ Military-Grade Protection:</strong><br/>
+256-bit AES encryption (bank-level security), end-to-end encryption, encrypted storage, and HTTPS-only communications.<br/><br/>
 
-**🛡️ Advanced Encryption:**
-- **256-bit AES Encryption** - Same security as banks
-- **End-to-End Encryption** - Data protected during transmission
-- **Encrypted Storage** - Information secure even at rest
-- **HTTPS Only** - All communications use secure protocols
+<strong>🔐 Access Control:</strong><br/>
+OTP verification for sensitive operations, patient consent required, role-based permissions, and automatic session logout.<br/><br/>
 
-**🔐 Access Control System:**
-- **OTP Verification** - One-time passwords for sensitive operations
-- **Patient Consent Required** - You control who accesses your data
-- **Role-Based Permissions** - Different access levels for different users
-- **Session Management** - Automatic logout for inactive sessions
+<strong>📊 Privacy & Compliance:</strong><br/>
+HIPAA and GDPR compliant, complete audit trails, no unauthorized sharing, and monitoring of all access attempts.<br/><br/>
 
-**📊 Privacy Protection Features:**
-- **HIPAA Compliant** - Meets healthcare privacy standards
-- **GDPR Compliant** - European data protection compliance
-- **Audit Trails** - Complete logs of who accessed your data when
-- **No Unauthorized Sharing** - Data never shared without consent
+<strong>👤 Your Rights:</strong><br/>
+✅ Data ownership and control<br/>
+✅ Decide who sees your records<br/>
+✅ Download your information anytime<br/>
+✅ Right to delete data<br/>
+✅ Approve or deny access requests<br/><br/>
 
-**🔍 What We Monitor:**
-- **Login Attempts** - Track all access attempts to your account
-- **Data Access Logs** - Record when and who viewed your information
-- **Suspicious Activity** - Immediate alerts for unusual behavior
-- **System Health** - Continuous monitoring of security systems
+<strong>🚨 Emergency Protocol:</strong><br/>
+Limited emergency access for life-threatening situations with patient contact first, full audit logging, and legal compliance.<br/><br/>
 
-**👤 Your Rights & Control:**
-- ✅ **Data Ownership** - You own and control your medical information
-- ✅ **Access Control** - Decide who can see your records
-- ✅ **Data Portability** - Download your information anytime
-- ✅ **Right to Delete** - Remove your data if you choose
-- ✅ **Consent Management** - Approve/deny access requests
-
-**🚨 Emergency Protocols:**
-- **Emergency Override** - Life-threatening situations may allow limited access
-- **Patient Contact First** - System tries to reach you before emergency access
-- **Legal Compliance** - Follows healthcare emergency regulations
-- **Audit Everything** - All emergency access is logged and tracked
-
-**📋 Compliance Standards:**
-- 🏥 **HIPAA Compliant** - Healthcare privacy regulations
-- 🌍 **GDPR Compliant** - European data protection
-- 🔒 **SOC 2 Type II** - Security controls certification
-- 📊 **Regular Audits** - Third-party security assessments
-
-*Your medical data security is our top priority - protected with the same level of security as major financial institutions!*`;
+<em>Protected with bank-level security standards! 🏦</em>`;
 
       return new Response(JSON.stringify({ text: dataSecurityResponse }), {
         status: 200,
@@ -250,36 +142,26 @@ export async function POST(req: Request) {
     // 5. "Can doctors see my prescriptions without permission?"
     if (lowerMessage.includes('doctors see my prescriptions') || 
         (lowerMessage.includes('doctor') && lowerMessage.includes('prescription') && lowerMessage.includes('permission'))) {
-      const prescriptionPrivacyResponse = `## 🔒 **Doctor Access to Your Prescriptions - Complete Privacy Control**
+      const prescriptionPrivacyResponse = `<strong>🔒 Doctor Access to Your Prescriptions</strong><br/><br/>
 
-**Your Prescription Privacy is Protected:**
+<strong>Your Privacy Protected:</strong><br/>
+❌ No automatic access - doctors cannot see prescriptions by default<br/>
+✋ Explicit consent required for any access<br/>
+🔐 You control which doctors see which prescriptions<br/>
+⏰ Set expiration dates for shared access<br/><br/>
 
-**Default Privacy Setting:**
-- ❌ **No Automatic Access** - Doctors cannot see your prescriptions by default
-- ✋ **Permission Required** - Explicit consent needed for any prescription access
-- 🔐 **Your Control** - You decide which doctors see which prescriptions
-- ⏰ **Time-Limited Access** - Set expiration dates for prescription sharing
+<strong>Permission Process:</strong><br/>
+Doctor requests access → You get instant notification → Review and decide → OTP confirmation → Access granted for authorized prescriptions only.<br/><br/>
 
-**How Permission System Works:**
-1. **Doctor Requests Access** - Healthcare provider submits access request
-2. **You Get Notified** - Instant alert about the permission request
-3. **Review & Decide** - Choose what to share and for how long
-4. **OTP Confirmation** - Secure verification of your decision
-5. **Access Granted** - Doctor can now view authorized prescriptions only
+<strong>Your Control:</strong><br/>
+🎯 Share specific prescriptions selectively<br/>
+⏰ Set access duration limits<br/>
+🔄 Revoke access anytime<br/>
+👁️ View complete access logs<br/><br/>
 
-**What You Control:**
-- 🎯 **Selective Sharing** - Share specific prescriptions with specific doctors
-- ⏰ **Access Duration** - Set how long doctors can view your data
-- 🔄 **Revoke Anytime** - Cancel doctor access instantly
-- 👁️ **View Logs** - See who accessed your prescriptions and when
+<strong>🚨 Emergency Access:</strong> Limited access for life-threatening cases with contact attempts first and full audit trails.<br/><br/>
 
-**Emergency Situations:**
-- 🚨 **Life-Threatening Cases** - Limited emergency access for critical care
-- 📞 **Contact Protocol** - System attempts to reach you first
-- 📋 **Full Audit Trail** - All emergency access is logged and tracked
-- ⚖️ **Legal Compliance** - Follows healthcare emergency regulations
-
-*Your prescriptions remain private unless you specifically grant permission to each doctor.*`;
+<em>Your prescriptions stay private unless you grant permission! 🛡️</em>`;
 
       return new Response(JSON.stringify({ text: prescriptionPrivacyResponse }), {
         status: 200,
@@ -290,41 +172,32 @@ export async function POST(req: Request) {
     // 6. "How do medication reminders work?"
     if ((lowerMessage.includes('medication') || lowerMessage.includes('medicine')) && 
         lowerMessage.includes('reminder')) {
-      const medicationRemindersResponse = `## ⏰ **How Smart Medication Reminders Work in Meditrack**
+      const medicationRemindersResponse = `<strong>⏰ Smart Medication Reminders</strong><br/><br/>
 
-**Intelligent Reminder System:**
+<strong>Automatic Setup:</strong><br/>
+Doctor prescribes → System creates optimal schedule → Adapts to your routine → Multi-channel alerts (app, SMS, email).<br/><br/>
 
-**Automatic Setup Process:**
-1. **Doctor Prescribes** - Medication details entered by healthcare provider
-2. **Smart Scheduling** - System creates optimal reminder times
-3. **Personal Customization** - Adapts to your daily routine and preferences
-4. **Multi-Channel Alerts** - Notifications via app, SMS, and email
+<strong>Smart Features:</strong><br/>
+🕐 Precise timing based on medical requirements<br/>
+🍽️ Food instruction reminders ("with food" or "empty stomach")<br/>
+💧 Special instructions ("drink plenty of water")<br/>
+⚠️ Drug interaction warnings<br/><br/>
 
-**Smart Reminder Features:**
-- 🕐 **Precise Timing** - Exact times based on medical requirements
-- 🍽️ **Food Instructions** - "Take with food" or "empty stomach" reminders
-- 💧 **Special Instructions** - "Drink plenty of water" alerts
-- ⚠️ **Drug Interaction Warnings** - Alerts about medication conflicts
+<strong>Customization:</strong><br/>
+📱 Choose notification methods<br/>
+🔊 Custom alert tones per medication<br/>
+📅 Flexible scheduling to fit your lifestyle<br/>
+🌙 Set quiet hours for do-not-disturb<br/><br/>
 
-**Customization Options:**
-- 📱 **Notification Preferences** - Choose push, SMS, email, or all
-- 🔊 **Custom Sounds** - Select unique alert tones for each medication
-- 📅 **Flexible Scheduling** - Adjust times to fit your lifestyle
-- 🌙 **Quiet Hours** - Set do-not-disturb periods
+<strong>Interactive Options:</strong><br/>
+✅ One-tap confirmation<br/>
+⏰ Snooze by 5, 10, or 30 minutes<br/>
+📸 Optional photo verification<br/>
+📝 Record notes and reactions<br/><br/>
 
-**Interactive Features:**
-- ✅ **Mark as Taken** - Confirm medication intake with one tap
-- ⏰ **Snooze Options** - Delay reminders by 5, 10, or 30 minutes
-- 📸 **Photo Verification** - Optional proof of intake
-- 📝 **Notes & Reactions** - Record how you feel after taking medicine
+<strong>Advanced:</strong> Handle multiple daily doses, track adherence, smart miss-dose recovery, and share progress reports with doctors.<br/><br/>
 
-**Advanced Capabilities:**
-- 🔄 **Multiple Daily Doses** - Handle complex medication schedules
-- 📊 **Adherence Tracking** - Monitor compliance over time
-- 🎯 **Miss-Dose Recovery** - Smart follow-up for skipped medications
-- 📈 **Progress Reports** - Share compliance data with doctors
-
-*Never miss a dose with our intelligent reminder system that adapts to your life and ensures optimal medication adherence!*`;
+<em>Never miss a dose with intelligent reminders! 🎯</em>`;
 
       return new Response(JSON.stringify({ text: medicationRemindersResponse }), {
         status: 200,
@@ -334,50 +207,39 @@ export async function POST(req: Request) {
 
     // 7. "What devices does Meditrack support?"
     if (lowerMessage.includes('device') && lowerMessage.includes('support')) {
-      const deviceSupportResponse = `## 📱 **Comprehensive Device Support for Meditrack**
+      const deviceSupportResponse = `<strong>📱 Device Support</strong><br/><br/>
 
-**Universal Device Compatibility:**
+<strong>Mobile:</strong><br/>
+📱 iOS 12+ (iPhone, iPad)<br/>
+🤖 Android 7.0+ smartphones and tablets<br/>
+⌚ Apple Watch, Samsung Galaxy Watch, Fitbit<br/><br/>
 
-**Mobile Devices:**
-- 📱 **iOS Devices** - iPhone (iOS 12+), iPad, iPod Touch
-- 🤖 **Android Devices** - Android 7.0+ smartphones and tablets
-- ⌚ **Wearables** - Apple Watch, Samsung Galaxy Watch, Fitbit integration
-- 💻 **Tablets** - Full tablet optimization for larger screens
+<strong>Desktop:</strong><br/>
+🖥️ Windows 10/11<br/>
+🍎 macOS (all models)<br/>
+🐧 Linux (Ubuntu, CentOS, Fedora)<br/>
+🌐 Chromebook<br/><br/>
 
-**Desktop & Laptop:**
-- 🖥️ **Windows** - Windows 10, 11 with native app and browser support
-- 🍎 **macOS** - MacBook, iMac, Mac Pro with full feature support
-- 🐧 **Linux** - Ubuntu, CentOS, Fedora browser compatibility
-- 🌐 **Chromebook** - Chrome OS full browser functionality
+<strong>Browsers:</strong><br/>
+✅ Chrome (recommended), Safari, Firefox, Edge, Opera<br/><br/>
 
-**Browser Compatibility:**
-- ✅ **Chrome** (Recommended) - Optimal performance and full features
-- ✅ **Safari** - Native iOS/macOS integration
-- ✅ **Firefox** - Complete functionality across all platforms
-- ✅ **Edge** - Windows integration and modern features
-- ✅ **Opera** - Full support with built-in VPN compatibility
+<strong>Features by Platform:</strong><br/>
+📸 Camera for medication proof (mobile)<br/>
+🔔 Push notifications (all devices)<br/>
+📍 Optional location services<br/>
+🎤 Voice input for quick notes<br/>
+💾 Limited offline mode<br/><br/>
 
-**Special Features by Platform:**
-- 📸 **Camera Integration** - Photo/video medication proof (mobile)
-- 🔔 **Push Notifications** - Real-time alerts across all devices
-- 📍 **Location Services** - Optional location verification
-- 🎤 **Voice Input** - Speech-to-text for quick note-taking
-- 💾 **Offline Mode** - Limited functionality without internet
+<strong>Accessibility:</strong><br/>
+👁️ Screen reader support (NVDA, JAWS, VoiceOver)<br/>
+🔤 Adjustable text sizes up to 200%<br/>
+🎨 High contrast mode<br/>
+⌨️ Full keyboard navigation<br/>
+🎵 Audio descriptions<br/><br/>
 
-**Accessibility Features:**
-- 👁️ **Screen Reader Support** - Full NVDA, JAWS, VoiceOver compatibility
-- 🔤 **Large Font Options** - Adjustable text sizes up to 200%
-- 🎨 **High Contrast Mode** - Enhanced visibility options
-- ⌨️ **Keyboard Navigation** - Complete keyboard-only control
-- 🎵 **Audio Descriptions** - Voice guidance for visual elements
+<strong>Requirements:</strong> 2GB RAM mobile / 4GB desktop, 100MB storage, internet connection, camera for verification.<br/><br/>
 
-**Performance Requirements:**
-- **RAM:** 2GB minimum mobile, 4GB desktop recommended
-- **Storage:** 100MB free space for app installation
-- **Internet:** 3G/4G/5G/WiFi connection required
-- **Camera:** Required for medication verification features
-
-*Meditrack works seamlessly on any device you use, ensuring your healthcare management is always accessible!*`;
+<em>Seamless access on any device! 🌟</em>`;
 
       return new Response(JSON.stringify({ text: deviceSupportResponse }), {
         status: 200,
@@ -388,47 +250,36 @@ export async function POST(req: Request) {
     // 8. "How are strategies personalized for me?"
     if (lowerMessage.includes('personalized') || 
         (lowerMessage.includes('strategies') && lowerMessage.includes('personalized'))) {
-      const personalizationResponse = `## 🎯 **How Meditrack Personalizes Your Healthcare Experience**
+      const personalizationResponse = `<strong>🎯 AI-Powered Personalization</strong><br/><br/>
 
-**AI-Powered Personalization Engine:**
+<strong>Data-Driven Customization:</strong><br/>
+📊 Learns from your medical history<br/>
+💊 Monitors treatment responses<br/>
+⏰ Adapts to your daily routines<br/>
+🎯 Optimizes for your health goals<br/><br/>
 
-**Data-Driven Customization:**
-- 📊 **Medical History Analysis** - System learns from your health records
-- 💊 **Medication Response Tracking** - Monitors how you respond to treatments
-- ⏰ **Lifestyle Pattern Recognition** - Adapts to your daily routines
-- 🎯 **Goal-Based Optimization** - Tailors strategies to your health objectives
+<strong>Smart Medication Management:</strong><br/>
+🕐 Optimal timing based on your schedule<br/>
+🍽️ Integrates with eating habits<br/>
+⚠️ Custom allergy warnings<br/>
+📱 Your preferred communication methods<br/><br/>
 
-**Personalized Medication Management:**
-- 🕐 **Optimal Timing** - Reminders based on your schedule and meal times
-- 🍽️ **Dietary Integration** - Considers your eating habits and food preferences
-- ⚠️ **Allergy Considerations** - Custom warnings for your specific allergies
-- 📱 **Communication Preferences** - Uses your preferred notification methods
+<strong>Lifestyle Adaptation:</strong><br/>
+🌅 Matches your sleep schedule<br/>
+🏢 Adjusts for work shifts<br/>
+👥 Coordinates with caregiver schedules<br/>
+🌍 Automatic time zone adjustments for travel<br/><br/>
 
-**Lifestyle Adaptation:**
-- 🌅 **Circadian Rhythm** - Medication timing matches your sleep schedule
-- 🏢 **Work Integration** - Adjusts for shift work or irregular hours
-- 👥 **Family Coordination** - Includes caregiver schedules and preferences
-- 🌍 **Travel Accommodations** - Automatic time zone adjustments
+<strong>AI Intelligence:</strong><br/>
+🤖 Continuous machine learning improvement<br/>
+📈 Predictive health analytics<br/>
+🎯 Personalized risk assessment<br/>
+💡 Proactive health recommendations<br/><br/>
 
-**Behavioral Learning:**
-- 📱 **Usage Patterns** - Learns when you're most likely to take medication
-- ✅ **Compliance History** - Adjusts strategies based on adherence patterns
-- 🔔 **Response Timing** - Finds optimal times for reminders and alerts
-- 💬 **Communication Style** - Adapts message tone and complexity
+<strong>Continuous Evolution:</strong><br/>
+Regular effectiveness assessment → Dynamic adjustments → Doctor feedback integration → Outcome-based optimization.<br/><br/>
 
-**AI-Powered Insights:**
-- 🤖 **Machine Learning** - Continuously improves based on your data
-- 📈 **Predictive Analytics** - Anticipates potential health issues
-- 🎯 **Risk Assessment** - Personalized health risk factors
-- 💡 **Proactive Recommendations** - Smart suggestions for better outcomes
-
-**Continuous Improvement:**
-- 📊 **Regular Assessment** - Evaluates strategy effectiveness
-- 🔄 **Dynamic Adjustments** - Modifies approaches based on results
-- 👨‍⚕️ **Doctor Feedback** - Incorporates medical professional input
-- 📈 **Outcome Tracking** - Measures success of personalized approaches
-
-*Every aspect of Meditrack adapts to you personally, creating a truly customized healthcare experience that evolves with your needs!*`;
+<em>Healthcare that truly adapts to you! 🌟</em>`;
 
       return new Response(JSON.stringify({ text: personalizationResponse }), {
         status: 200,
@@ -438,48 +289,31 @@ export async function POST(req: Request) {
 
     // Common platform overview questions
     if (lowerMessage.includes('what') && (lowerMessage.includes('can you do') || lowerMessage.includes('things you can do'))) {
-      const overviewResponse = `## 🌟 **What I Can Help You With - Meditrack Assistant**
+      const overviewResponse = `<strong>🌟 Meditrack Assistant - How I Can Help</strong><br/><br/>
 
-**I'm your comprehensive guide to the Secure Health Management & Personalized Medicine Tracking Platform (Meditrack). I can provide detailed information about:**
+I'm your comprehensive guide to Meditrack's Secure Health Management Platform. I provide detailed information about:<br/><br/>
 
-**👤 Patient Services:**
-- ✅ Account creation and profile management
-- ✅ Appointment booking and scheduling
-- ✅ Medication tracking and reminders
-- ✅ Prescription management and verification
-- ✅ Health record access and sharing
-- ✅ Privacy controls and data security
+<strong>👤 Patient Services:</strong><br/>
+Account management, appointment booking, medication tracking, prescription management, health records, privacy controls.<br/><br/>
 
-**👨‍⚕️ Doctor Features:**
-- ✅ Patient management and consultation
-- ✅ Prescription writing and monitoring
-- ✅ Medication compliance verification
-- ✅ Schedule management and availability
-- ✅ Patient communication and follow-up
+<strong>👨‍⚕️ Doctor Features:</strong><br/>
+Patient management, consultation tools, prescription writing, medication compliance verification, schedule management.<br/><br/>
 
-**🏥 Hospital Administration:**
-- ✅ Doctor registration and approval
-- ✅ Hospital-wide appointment oversight
-- ✅ Fee management and billing
-- ✅ Multi-branch coordination
-- ✅ Staff and resource management
+<strong>🏥 Hospital Administration:</strong><br/>
+Doctor registration, appointment oversight, fee management, multi-branch coordination, resource management.<br/><br/>
 
-**🔧 System Features:**
-- ✅ Security and privacy protections
-- ✅ Device compatibility and support
-- ✅ Personalization and AI features
-- ✅ Integration capabilities
-- ✅ Compliance and regulations
+<strong>🔧 System Features:</strong><br/>
+Security and privacy, device compatibility, AI personalization, integration capabilities, compliance standards.<br/><br/>
 
-**Ask me anything about:**
-- 🔐 Data security and privacy
-- 📱 Platform functionality and features  
-- 🎯 Personalized healthcare strategies
-- 💊 Medicine tracking and verification
-- 📅 Appointment booking and management
-- 🔄 Account setup and configuration
+<strong>Ask me about:</strong><br/>
+🔐 Data security<br/>
+📱 Platform functionality<br/>
+🎯 Personalized strategies<br/>
+💊 Medicine tracking<br/>
+📅 Appointment booking<br/>
+🔄 Account setup<br/><br/>
 
-*I'm here to help you understand and make the most of Meditrack's comprehensive healthcare management platform!*`;
+<em>I'm here to help you maximize Meditrack's comprehensive healthcare platform! 💙</em>`;
 
       return new Response(JSON.stringify({ text: overviewResponse }), {
         status: 200,
@@ -508,6 +342,7 @@ Follow these instructions strictly:
 1. ONLY answer questions related to Meditrack platform.  
 2. If the question is unrelated, politely respond with: "Sorry, I can only answer questions about the Secure Health Management & Personalized Medicine Tracking Platform (Meditrack)."  
 3. Always base your answers on the platform description and features provided.
+4. Keep answers concise (maximum 4-6 sentences). Use HTML markup: <br/> for line breaks, <strong> for emphasis, <em> for italics. DO NOT use markdown formatting like ** or ##. You may include relevant emojis.
 
 ### Platform Overview:
 Meditrack is a comprehensive healthcare system with role-based access:
