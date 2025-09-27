@@ -5,10 +5,12 @@ import Settings from '@/app/components/Settings';
 
 const Page = () => {
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gray-50">
       <SideNavbar />
-      <div className="flex-1">
-        <Settings />
+      <div className="flex-1 lg:ml-0 ml-0">
+        <div className="pt-16 lg:pt-0">
+          <Settings />
+        </div>
       </div>
     </div>
   );

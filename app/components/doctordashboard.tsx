@@ -24,40 +24,48 @@ const pieChartData = [
   { name: 'Return', value: 15, color: '#f87171' },
 ];
 
-// Dummy recent orders data
-const recentOrders = [
+// Dummy appointments data
+const todaysAppointments = [
   {
-    trackingNo: '#876364',
-    productName: 'Camera Lens',
-    price: '$178',
-    totalOrder: 325,
-    totalAmount: '$1,46,660',
-    avatar: '👨‍⚕️'
+    id: 1,
+    patientName: 'John Smith',
+    time: '9:00 AM',
+    type: 'Consultation',
+    status: 'Confirmed',
+    avatar: '👨'
   },
   {
-    trackingNo: '#876368',
-    productName: 'Black Sleep Dress',
-    price: '$14',
-    totalOrder: 53,
-    totalAmount: '$46,660',
-    avatar: '👩‍⚕️'
+    id: 2,
+    patientName: 'Sarah Johnson',
+    time: '10:30 AM',
+    type: 'Follow-up',
+    status: 'Pending',
+    avatar: '👩'
   },
   {
-    trackingNo: '#876412',
-    productName: 'Argan Oil',
-    price: '$21',
-    totalOrder: 78,
-    totalAmount: '$3,46,676',
-    avatar: '🧴'
+    id: 3,
+    patientName: 'Michael Brown',
+    time: '2:00 PM',
+    type: 'Check-up',
+    status: 'Confirmed',
+    avatar: '👨'
   },
   {
-    trackingNo: '#876621',
-    productName: 'EAU DE Parfum',
-    price: '$32',
-    totalOrder: 98,
-    totalAmount: '$3,46,981',
-    avatar: '🧴'
+    id: 4,
+    patientName: 'Emily Davis',
+    time: '3:30 PM',
+    type: 'Consultation',
+    status: 'Confirmed',
+    avatar: '👩'
   },
+  {
+    id: 5,
+    patientName: 'David Wilson',
+    time: '4:45 PM',
+    type: 'Emergency',
+    status: 'Urgent',
+    avatar: '👨'
+  }
 ];
 
 const DoctorDashboard = () => {
@@ -219,59 +227,64 @@ const DoctorDashboard = () => {
         </div>
       </div>
 
-      {/* Bottom Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Orders */}
-        <div className="bg-white p-6 rounded-xl shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-800">Recent Orders</h3>
+      {/* Today's Appointments - Full Width */}
+      <div className="bg-white p-6 rounded-xl shadow-sm">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-semibold text-gray-800">Today&apos;s Appointments</h3>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500">Total: {todaysAppointments.length} appointments</span>
             <FaEllipsisH className="text-gray-400" />
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-gray-600 text-sm border-b">
-                  <th className="pb-3">Tracking no</th>
-                  <th className="pb-3">Product Name</th>
-                  <th className="pb-3">Price</th>
-                  <th className="pb-3">Total Order</th>
-                  <th className="pb-3">Total Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentOrders.map((order, index) => (
-                  <tr key={index} className="border-b border-gray-100">
-                    <td className="py-4 text-sm text-gray-800">{order.trackingNo}</td>
-                    <td className="py-4">
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg">{order.avatar}</span>
-                        <span className="text-sm text-gray-800">{order.productName}</span>
-                      </div>
-                    </td>
-                    <td className="py-4 text-sm text-gray-800">{order.price}</td>
-                    <td className="py-4">
-                      <span className="bg-green-100 text-green-600 px-2 py-1 rounded text-sm">
-                        {order.totalOrder}
-                      </span>
-                    </td>
-                    <td className="py-4 text-sm text-gray-800">{order.totalAmount}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         </div>
-
-        {/* Today's Appointments */}
-        <div className="bg-white p-6 rounded-xl shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-800">Today&apos;s Appointments</h3>
-            <FaEllipsisH className="text-gray-400" />
-          </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {todaysAppointments.map((appointment) => (
+            <div key={appointment.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-lg">{appointment.avatar}</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800">{appointment.patientName}</h4>
+                    <p className="text-sm text-gray-500">{appointment.type}</p>
+                  </div>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  appointment.status === 'Confirmed' ? 'bg-green-100 text-green-600' :
+                  appointment.status === 'Pending' ? 'bg-yellow-100 text-yellow-600' :
+                  appointment.status === 'Urgent' ? 'bg-red-100 text-red-600' :
+                  'bg-gray-100 text-gray-600'
+                }`}>
+                  {appointment.status}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FaCalendarAlt className="text-blue-500 text-sm" />
+                  <span className="text-sm font-medium text-gray-700">{appointment.time}</span>
+                </div>
+                <div className="flex gap-2">
+                  <button className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors">
+                    View
+                  </button>
+                  <button className="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors">
+                    Start
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {todaysAppointments.length === 0 && (
           <div className="flex items-center justify-center h-32">
-            <p className="text-gray-500">No Appointments yet!</p>
+            <div className="text-center">
+              <FaCalendarAlt className="text-gray-300 text-4xl mb-3 mx-auto" />
+              <p className="text-gray-500">No appointments scheduled for today</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
