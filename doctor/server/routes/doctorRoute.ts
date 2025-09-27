@@ -37,7 +37,7 @@ export const doctorRouter = createTRPCRouter({
                     }
                 });
                 const doctor = await db.query.doctors.findFirst({
-                    where: eq(doctors.id, ctx.session.user.id),
+                    where: eq(doctors.userId, ctx.session.user.id),
                 });
                 if (!doctor) {
                     throw new TRPCError({
