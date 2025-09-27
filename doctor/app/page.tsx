@@ -23,7 +23,7 @@ export default function Home() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <Stethoscope className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">MedConnect</span>
+              <span className="ml-2 text-xl font-bold text-gray-900">MedLink</span>
             </div>
             <div className="flex items-center space-x-4">
               <Link href="/signin">
@@ -265,7 +265,7 @@ export default function Home() {
             <div className="md:col-span-2">
               <div className="flex items-center mb-4">
                 <Stethoscope className="h-8 w-8 text-blue-400" />
-                <span className="ml-2 text-xl font-bold">MedConnect</span>
+                <span className="ml-2 text-xl font-bold">MedLink</span>
               </div>
               <p className="text-gray-300 mb-4">
                 Transforming healthcare management with modern technology.
@@ -296,7 +296,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 MedConnect. All rights reserved. Built with Next.js and modern web technologies.</p>
+            <p>&copy; 2024 MedLink. All rights reserved. Built with Next.js and modern web technologies.</p>
           </div>
         </div>
       </footer>
