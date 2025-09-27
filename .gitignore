@@ -9,10 +9,11 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-
+.expo
+android
 # testing
 /coverage
-
+/doctor
 # next.js
 /.next/
 /out/
