@@ -17,7 +17,7 @@ export const doctorRouter = createTRPCRouter({
             appointmentId: z.number(),
             remarks: z.string(),
             prescriptionDetails: z.string().optional(),
-            nextVisitDate: z.string().optional(),
+            nextVisitDate: z.string().datetime().optional(),
             medicines: z.array(z.object({
                 name: z.string(),
                 dosage: z.string(),
@@ -64,9 +64,6 @@ export const doctorRouter = createTRPCRouter({
 
                 // Create prescriptions for each medicine
                 for (const medicine of input.medicines) {
-                    const endDate = new Date();
-                    endDate.setDate(endDate.getDate() + medicine.duration);
-
                     const [prescription] = await db.insert(prescriptions).values({
                         consultationId: consultation.id,
                         medicineName: medicine.name,
@@ -75,7 +72,7 @@ export const doctorRouter = createTRPCRouter({
                         durationDays: medicine.duration,
                         instructions: medicine.instructions,
                         beforeFood: medicine.beforeFood,
-                        endDate: endDate,
+                        endDate: sql`now() + interval '${medicine.duration} days'`,
                     }).returning();
 
                     // Create medicine reminders based on frequency

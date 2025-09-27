@@ -227,7 +227,7 @@ export const adminRouter = createTRPCRouter({
         .set({
           isVerified: input.approved,
           isActive: input.approved,
-          updatedAt: new Date(),
+          updatedAt: sql`now()`,
           verifiedBy: Number(ctx.session.user.id),
         })
         .where(eq(hospitals.id, input.hospitalId))
@@ -271,7 +271,7 @@ export const adminRouter = createTRPCRouter({
           isVerified: input.approved,
           isActive: input.approved,
           verifiedBy: Number(ctx.session.user.id),
-          updatedAt: new Date(),
+          updatedAt: sql`now()`,
         })
         .where(eq(doctors.id, input.doctorId))
         .returning();
@@ -314,7 +314,7 @@ export const adminRouter = createTRPCRouter({
           isActive: input.active,
           isVerified: input.active ? true : false,
           status: input.active ? "active" : "rejected",
-          updatedAt: new Date(),
+          updatedAt: sql`now()`,
         })
         .where(eq(hospitals.id, input.hospitalId))
         .returning();
@@ -354,7 +354,7 @@ export const adminRouter = createTRPCRouter({
         .update(doctors)
         .set({
           isActive: input.active,
-          updatedAt: new Date(),
+          updatedAt: sql`now()`,
         })
         .where(eq(doctors.id, input.doctorId))
         .returning();

@@ -666,6 +666,9 @@ export const userRouter = createTRPCRouter({
                 doctorId: z.number().optional(),
                 patientId: z.number().optional(),
                 hospitalId: z.number().optional(),
+            }).refine((data) => !data.dateFrom || !data.dateTo || data.dateTo >= data.dateFrom, {
+                message: "dateTo must be after or equal to dateFrom",
+                path: ["dateTo"],
             })
         )
         .query(async ({ ctx, input }) => {
@@ -806,7 +809,7 @@ export const userRouter = createTRPCRouter({
                 .update(appointments)
                 .set({
                     status: input.status,
-                    updatedAt: new Date(),
+                    updatedAt: sql`now()`,
                 })
                 .where(eq(appointments.id, input.appointmentId));
 
@@ -897,7 +900,7 @@ export const userRouter = createTRPCRouter({
                 .update(appointments)
                 .set({
                     status: "COMPLETED",
-                    updatedAt: new Date(),
+                    updatedAt: sql`now()`,
                 })
                 .where(eq(appointments.id, input.appointmentId));
 
@@ -1120,6 +1123,9 @@ export const userRouter = createTRPCRouter({
                 startDate: z.date(),
                 endDate: z.date(),
                 doctorId: z.number().optional(),
+            }).refine((data) => data.endDate >= data.startDate, {
+                message: "End date must be after or equal to start date",
+                path: ["endDate"],
             })
         )
         .query(async ({ ctx, input }) => {

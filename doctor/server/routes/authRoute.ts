@@ -272,7 +272,7 @@ export const authRouter = createTRPCRouter({
         throw new TRPCError({ code: "FORBIDDEN", message: "Account pending approval" });
       }
 
-      await db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, u.id));
+      await db.update(users).set({ lastLogin: sql`now()` }).where(eq(users.id, u.id));
 
       return { message: "Login successful", user: u };
     }),

@@ -189,7 +189,7 @@ export const hospitalRouter = createTRPCRouter({
         .set({
           isVerified: input.approved,
           isActive: input.approved,
-          updatedAt: new Date(),
+          updatedAt: sql`now()`,
         })
         .where(eq(hospitals.id, input.hospitalId))
         .returning();
@@ -384,7 +384,7 @@ export const hospitalRouter = createTRPCRouter({
         .set({
           isVerified: input.approved,
           isActive: input.approved,
-          updatedAt: new Date(),
+          updatedAt: sql`now()`,
         })
         .where(
           and(
@@ -760,8 +760,8 @@ export const hospitalRouter = createTRPCRouter({
         .set({
           status: "approved",
           respondedBy: userId,
-          respondedAt: new Date(),
-          updatedAt: new Date(),
+          respondedAt: sql`now()`,
+          updatedAt: sql`now()`,
         })
         .where(eq(hospitalJoinRequests.id, input.requestId));
 
@@ -799,8 +799,8 @@ export const hospitalRouter = createTRPCRouter({
         .set({
           status: "rejected",
           respondedBy: userId,
-          respondedAt: new Date(),
-          updatedAt: new Date(),
+          respondedAt: sql`now()`,
+          updatedAt: sql`now()`,
         })
         .where(and(
           eq(hospitalJoinRequests.id, input.requestId),
