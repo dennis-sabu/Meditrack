@@ -354,7 +354,7 @@ export default function ChatWidget() {
   };
 
   // Hide on auth page
-  if (pathname?.startsWith('/auth')) return null;
+  if (pathname?.startsWith('/signin')) return null;
 
   return (
     <>

@@ -5,6 +5,6 @@ import { usePathname } from 'next/navigation';
 
 export default function ChatWidgetContainer() {
   const pathname = usePathname();
-  if (pathname?.startsWith('/auth')) return null;
+  if (pathname?.startsWith('/signin')) return null;
   return <ChatWidget />;
 }

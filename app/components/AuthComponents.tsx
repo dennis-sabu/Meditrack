@@ -1,10 +1,19 @@
+"use client";
 
-'use client';
-
-import { useState } from 'react';
-import { FiEye, FiEyeOff, FiUser, FiMail, FiLock } from 'react-icons/fi';
-import toast from 'react-hot-toast';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useState } from "react";
+import {
+  FiEye,
+  FiEyeOff,
+  FiUser,
+  FiMail,
+  FiLock,
+  FiPhone,
+} from "react-icons/fi";
+import toast from "react-hot-toast";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { date } from "drizzle-orm/mysql-core";
+import { api } from "@/utils/react";
+import { signIn } from "next-auth/react";
 
 interface UserData {
   username: string;
@@ -21,42 +30,83 @@ export default function AuthComponent({ onAuthSuccess }: AuthComponentProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: ''
+    name: "",
+    email: "",
+    password: "",
+    dateOfBirth: new Date(),
+    phone: "",
+    gender: "",
   });
   const prefersReducedMotion = useReducedMotion();
-
+  const registermutation = api.auth.registerPatient.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success(data.message);
+        toggleAuthMode();
+      } else {
+        toast.error(data.message);
+      }
+    },
+    onError: (error) => {
+      toast.error("Registration failed: " + error.message);
+    },
+  });
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // await new Promise(resolve => setTimeout(resolve, 1000));
+
       // Handle authentication logic here
-      console.log(isLogin ? 'Login' : 'Sign Up', formData);
-      
+      console.log(isLogin ? "Login" : "Sign Up", formData);
+      if (!isLogin) {
+        // Simulate account creation logic
+        console.log("Creating account for:", formData);
+        await registermutation.mutateAsync({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone,
+          dateOfBirth: formData.dateOfBirth.toISOString(),
+        });
+      }else{
+        const result = signIn("credentials", {
+          redirect: false,
+          callbackUrl:'/dashboard',
+          email: formData.email,
+          password: formData.password,
+        });
+        if ((await result)?.error) {
+          toast.error("Invalid email or password");
+          setIsLoading(false);
+          return;
+        }
+        if((await result)?.ok && (await result)?.status === 200){
+          window.location.href = '/dashboard';
+        }
+      }
       if (onAuthSuccess) {
         onAuthSuccess({
-          username: formData.username,
+          username: formData.name,
           email: formData.email,
-          isNewUser: !isLogin
+          isNewUser: !isLogin,
         });
       }
-      toast.success(isLogin ? 'Logged in successfully' : 'Account created successfully');
+      // toast.success(
+      //   isLogin ? "Logged in successfully" : "Account created successfully"
+      // );
     } catch (error) {
-      console.error('Auth error:', error);
-      toast.error('Authentication failed');
+      console.error("Auth error:", error);
+      toast.error("Authentication failed");
     } finally {
       setIsLoading(false);
     }
@@ -65,9 +115,12 @@ export default function AuthComponent({ onAuthSuccess }: AuthComponentProps) {
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
     setFormData({
-      username: '',
-      email: '',
-      password: ''
+      name: "",
+      email: "",
+      password: "",
+      dateOfBirth: new Date(),
+      phone: "",
+      gender: "",
     });
   };
 
@@ -76,10 +129,10 @@ export default function AuthComponent({ onAuthSuccess }: AuthComponentProps) {
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-black mb-2">
-          {isLogin ? 'Welcome Back' : 'Join Medilink'}
+          {isLogin ? "Welcome Back" : "Join Medilink"}
         </h1>
         <p className="text-gray-600">
-          {isLogin ? 'Log in to your account' : 'Create your account today'}
+          {isLogin ? "Log in to your account" : "Create your account today"}
         </p>
       </div>
 
@@ -87,7 +140,7 @@ export default function AuthComponent({ onAuthSuccess }: AuthComponentProps) {
       <motion.div
         layout
         transition={{
-          type: prefersReducedMotion ? 'tween' : 'spring',
+          type: prefersReducedMotion ? "tween" : "spring",
           stiffness: 160,
           damping: 26,
           mass: 1,
@@ -102,24 +155,65 @@ export default function AuthComponent({ onAuthSuccess }: AuthComponentProps) {
               <motion.div
                 key="username-field"
                 initial={{ opacity: 0, x: -6, height: 0 }}
-                animate={{ opacity: 1, x: 0, height: 'auto' }}
+                animate={{ opacity: 1, x: 0, height: "auto" }}
                 exit={{ opacity: 0, x: -6, height: 0 }}
-                transition={{ duration: prefersReducedMotion ? 0 : 0.4, ease: 'easeInOut' }}
+                transition={{
+                  duration: prefersReducedMotion ? 0 : 0.4,
+                  ease: "easeInOut",
+                }}
                 className="space-y-2 overflow-hidden"
               >
-                <label htmlFor="username" className="text-sm font-medium text-gray-800 block">
-                  Username
+                <label
+                  htmlFor="name"
+                  className="text-sm font-medium text-gray-800 block"
+                >
+                  Name
                 </label>
                 <div className="relative">
                   <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
                   <input
                     type="text"
-                    id="username"
-                    name="username"
-                    value={formData.username}
+                    id="name"
+                    name="name"
+                    value={formData.name}
                     onChange={handleInputChange}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-200 bg-white text-black placeholder:text-gray-400"
-                    placeholder="Choose a username"
+                    placeholder="Enter your full name"
+                    required={!isLogin}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <AnimatePresence initial={false} mode="wait">
+            {!isLogin && (
+              <motion.div
+                key="username-field"
+                initial={{ opacity: 0, x: -6, height: 0 }}
+                animate={{ opacity: 1, x: 0, height: "auto" }}
+                exit={{ opacity: 0, x: -6, height: 0 }}
+                transition={{
+                  duration: prefersReducedMotion ? 0 : 0.4,
+                  ease: "easeInOut",
+                }}
+                className="space-y-2 overflow-hidden"
+              >
+                <label
+                  htmlFor="name"
+                  className="text-sm font-medium text-gray-800 block"
+                >
+                  Phone
+                </label>
+                <div className="relative">
+                  <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
+                  <input
+                    type="text"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-200 bg-white text-black placeholder:text-gray-400"
+                    placeholder="Enter your phone number"
                     required={!isLogin}
                   />
                 </div>
@@ -129,7 +223,10 @@ export default function AuthComponent({ onAuthSuccess }: AuthComponentProps) {
 
           {/* Email Field - Always visible (Login + Sign Up) */}
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium text-gray-800 block">
+            <label
+              htmlFor="email"
+              className="text-sm font-medium text-gray-800 block"
+            >
               Email Address
             </label>
             <div className="relative">
@@ -141,8 +238,10 @@ export default function AuthComponent({ onAuthSuccess }: AuthComponentProps) {
                 value={formData.email}
                 onChange={handleInputChange}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-200 bg-white text-black placeholder:text-gray-400"
-                placeholder={isLogin ? 'Enter your email' : 'Enter your email address'}
-                autoComplete={isLogin ? 'email' : 'new-email'}
+                placeholder={
+                  isLogin ? "Enter your email" : "Enter your email address"
+                }
+                autoComplete={isLogin ? "email" : "new-email"}
                 required
               />
             </div>
@@ -150,7 +249,10 @@ export default function AuthComponent({ onAuthSuccess }: AuthComponentProps) {
 
           {/* Password Field */}
           <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium text-gray-800 block">
+            <label
+              htmlFor="password"
+              className="text-sm font-medium text-gray-800 block"
+            >
               Password
             </label>
             <div className="relative">
@@ -171,7 +273,11 @@ export default function AuthComponent({ onAuthSuccess }: AuthComponentProps) {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black transition-colors duration-200"
               >
-                {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                {showPassword ? (
+                  <FiEyeOff className="w-5 h-5" />
+                ) : (
+                  <FiEye className="w-5 h-5" />
+                )}
               </button>
             </div>
             {!isLogin && (
@@ -190,12 +296,10 @@ export default function AuthComponent({ onAuthSuccess }: AuthComponentProps) {
             {isLoading ? (
               <div className="flex items-center justify-center">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                {isLogin ? 'Logging In...' : 'Creating Account...'}
+                {isLogin ? "Logging In..." : "Creating Account..."}
               </div>
             ) : (
-              <>
-                {isLogin ? 'Log In' : 'Create Account'}
-              </>
+              <>{isLogin ? "Log In" : "Create Account"}</>
             )}
           </button>
 
@@ -216,14 +320,16 @@ export default function AuthComponent({ onAuthSuccess }: AuthComponentProps) {
         <div className="mt-6 pt-6 border-t border-green-100">
           <div className="text-center">
             <span className="text-gray-700 text-sm">
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
+              {isLogin
+                ? "Don't have an account? "
+                : "Already have an account? "}
             </span>
             <motion.button
               onClick={toggleAuthMode}
               whileTap={{ scale: 0.98 }}
               className="font-medium text-black hover:text-gray-900 transition-colors duration-200 underline decoration-gray-300 hover:decoration-gray-500 text-sm"
             >
-              {isLogin ? 'Create one here' : 'Log in instead'}
+              {isLogin ? "Create one here" : "Log in instead"}
             </motion.button>
           </div>
         </div>
@@ -232,10 +338,14 @@ export default function AuthComponent({ onAuthSuccess }: AuthComponentProps) {
       {/* Additional Info */}
       {!isLogin && (
         <div className="mt-4 text-center text-xs text-gray-600">
-          By creating an account, you agree to our{' '}
-          <a href="#" className="underline hover:text-black">Terms of Service</a>{' '}
-          and{' '}
-          <a href="#" className="underline hover:text-black">Privacy Policy</a>
+          By creating an account, you agree to our{" "}
+          <a href="#" className="underline hover:text-black">
+            Terms of Service
+          </a>{" "}
+          and{" "}
+          <a href="#" className="underline hover:text-black">
+            Privacy Policy
+          </a>
         </div>
       )}
     </div>

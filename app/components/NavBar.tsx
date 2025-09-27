@@ -4,10 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import { HiMenuAlt3, HiX } from "react-icons/hi";
 import gsap from "gsap";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 
 export default function Navbar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-
+  const session = useSession();
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
   const linksRef = useRef<HTMLAnchorElement[]>([]);
 
@@ -37,8 +38,6 @@ export default function Navbar() {
     }
   }, [isMobileOpen]);
 
-
-
   const closeMobileMenu = () => {
     if (mobileMenuRef.current) {
       gsap.to(linksRef.current, {
@@ -65,50 +64,69 @@ export default function Navbar() {
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <Image 
-            src="/logo.png"
-            alt="MediLink Logo"
-            width={40}
-            height={40}
-          />
+          <Image src="/logo.png" alt="MediLink Logo" width={40} height={40} />
 
           <span className="text-xl font-semibold text-gray-900">Meditrack</span>
         </Link>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-8 text-gray-700">
-          <Link href="/" className="hover:text-green-600 transition active:scale-95">
+          <Link
+            href="/"
+            className="hover:text-green-600 transition active:scale-95"
+          >
             Home
           </Link>
 
-          <Link href="/doctors" className="hover:text-green-600 transition active:scale-95">
+          <Link
+            href="/doctors"
+            className="hover:text-green-600 transition active:scale-95"
+          >
             For Doctors
           </Link>
-          <Link href="/patients" className="hover:text-green-600 transition active:scale-95">
+          <Link
+            href="/patients"
+            className="hover:text-green-600 transition active:scale-95"
+          >
             For Patients
           </Link>
-          <Link href="/contact" className="hover:text-green-600 transition active:scale-95">
+          <Link
+            href="/contact"
+            className="hover:text-green-600 transition active:scale-95"
+          >
             Contact
           </Link>
         </div>
 
         {/* Desktop Buttons */}
-        <div className="hidden md:flex items-center space-x-4">
-          <Link
-            href="/auth"
-            className="px-5 py-2 rounded-full border border-green-500 text-green-600  
+        {session?.status === "authenticated" ? (
+          <div className="hidden md:flex items-center space-x-4">
+            <Link
+              href="/dashboard"
+              className="px-5 py-2 rounded-full bg-green-500 text-white
+              hover:bg-green-600 transition active:scale-95"
+            >
+              Dashboard
+            </Link>
+          </div>
+        ) : (
+          <div className="hidden md:flex items-center space-x-4">
+            <Link
+              href="/signin"
+              className="px-5 py-2 rounded-full border border-green-500 text-green-600  
             transition hover:bg-black hover:text-white active:scale-95"
-          >
-            Log In
-          </Link>
-          <Link
-            href="/auth"
-            className="px-5 py-2 rounded-full bg-green-500 text-white 
+            >
+              Log In
+            </Link>
+            <Link
+              href="/signin"
+              className="px-5 py-2 rounded-full bg-green-500 text-white 
             hover:bg-green-600 transition active:scale-95"
-          >
-            Get Started
-          </Link>
-        </div>
+            >
+              Get Started
+            </Link>
+          </div>
+        )}
 
         {/* Mobile Hamburger */}
         <button
@@ -160,7 +178,7 @@ export default function Navbar() {
           {/* Bottom Buttons */}
           <div className="px-6 pb-10 space-y-4">
             <Link
-              href="/auth"
+              href="/signin"
               onClick={closeMobileMenu}
               ref={(el) => {
                 if (el) linksRef.current[4] = el;
@@ -171,7 +189,7 @@ export default function Navbar() {
               Log In
             </Link>
             <Link
-              href="/auth"
+              href="/signin"
               onClick={closeMobileMenu}
               ref={(el) => {
                 if (el) linksRef.current[5] = el;

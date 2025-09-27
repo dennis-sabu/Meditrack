@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Figtree, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ChatWidgetContainer from "./components/ChatWidgetContainer";
 import ToasterProvider from "./components/ToasterProvider";
+import Providers from "./(auth)/signin/Providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
-const geistMono = Geist_Mono({
+const geistMono = Figtree({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
@@ -27,9 +24,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistMono.className} antialiased`}
       >
-        {children}
+        <Providers>
+          {children}
+        </Providers>
         <ToasterProvider />
         {/* Include the ChatWidget at the application root level */}
         <ChatWidgetContainer />

@@ -1,29 +1,40 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import AuthComponent from '../components/AuthComponents';
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
+import AuthComponent from "@/app/components/AuthComponents";
+import { signIn, useSession } from "next-auth/react";
 
 export default function AuthPage() {
   const slides = [
-    '/img1.jpg',
-    '/img2.jpg',
-    '/img3.jpg',
-    '/img4.jpg',
-    '/img5.jpg',
+    "/img1.jpg",
+    "/img2.jpg",
+    "/img3.jpg",
+    "/img4.jpg",
+    "/img5.jpg",
   ];
   const [index, setIndex] = useState(0);
-
+  const session = useSession();
+  useEffect(() => {
+    if (session) {
+      if (session?.status === "authenticated") {
+        window.location.href = "/dashboard";
+      }
+    }
+  }, [session]);
   useEffect(() => {
     const id = setInterval(() => {
       setIndex((i) => (i + 1) % slides.length);
     }, 8500);
     return () => clearInterval(id);
   }, [slides.length]);
-  const handleAuthSuccess = (userData: { username: string; email: string; isNewUser: boolean }) => {
-    console.log('Auth successful:', userData);
-    
+  const handleAuthSuccess = (userData: {
+    username: string;
+    email: string;
+    isNewUser: boolean;
+  }) => {
+    console.log("Auth successful:", userData);
   };
 
   return (
@@ -42,21 +53,24 @@ export default function AuthPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: 'easeOut' }}
+            transition={{ duration: 1, ease: "easeOut" }}
             className="hidden md:block"
           >
             <div className="relative rounded-3xl overflow-hidden border border-white/40 bg-white/40 backdrop-blur-md shadow-xl">
               {/* Soft overlay tint */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-green-200/20 to-green-50/10" aria-hidden="true"></div>
+              <div
+                className="absolute inset-0 bg-gradient-to-tr from-green-200/20 to-green-50/10"
+                aria-hidden="true"
+              ></div>
               {/* Endless loop slider (no text) */}
               <div className="relative h-[600px] w-[full] overflow-hidden">
                 <AnimatePresence initial={false} mode="wait">
                   <motion.div
                     key={slides[index]}
-                    initial={{ x: '100%', opacity: 0 }}
-                    animate={{ x: '0%', opacity: 1 }}
-                    exit={{ x: '-100%', opacity: 0 }}
-                    transition={{ duration: 0.6, ease: 'easeInOut' }}
+                    initial={{ x: "100%", opacity: 0 }}
+                    animate={{ x: "0%", opacity: 1 }}
+                    exit={{ x: "-100%", opacity: 0 }}
+                    transition={{ duration: 0.6, ease: "easeInOut" }}
                     className="absolute inset-0"
                   >
                     <Image
