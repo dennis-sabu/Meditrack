@@ -170,15 +170,49 @@ export const consultations = pgTable("consultations", {
 });
 
 //
-// PRESCRIPTIONS (Optional normalized medicine list)
+// PRESCRIPTIONS (Enhanced medicine list with detailed fields)
 //
 export const prescriptions = pgTable("prescriptions", {
   id: serial("id").primaryKey(),
   consultationId: integer("consultation_id").references(() => consultations.id).notNull(),
   medicineName: varchar("medicine_name", { length: 150 }).notNull(),
-  dosage: varchar("dosage", { length: 50 }), // e.g. 500mg
-  frequency: varchar("frequency", { length: 50 }), // e.g. Twice a day
-  durationDays: integer("duration_days"), // how many days
+  dosage: varchar("dosage", { length: 50 }).notNull(), // e.g. 500mg
+  frequency: varchar("frequency", { length: 50 }).notNull(), // e.g. Twice a day
+  durationDays: integer("duration_days").notNull(), // how many days
+  instructions: text("instructions"), // Special instructions for the medicine
+  beforeFood: boolean("before_food").default(true), // Whether to take before or after food
+  startDate: timestamp("start_date").defaultNow(), // When to start taking the medicine
+  endDate: timestamp("end_date"), // Calculated end date based on duration
+  isActive: boolean("is_active").default(true), // Whether the prescription is still active
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+//
+// MEDICINE REMINDERS (For patient reminder functionality)
+//
+export const medicineReminders = pgTable("medicine_reminders", {
+  id: serial("id").primaryKey(),
+  prescriptionId: integer("prescription_id").references(() => prescriptions.id).notNull(),
+  patientId: integer("patient_id").references(() => patients.id).notNull(),
+  reminderTime: varchar("reminder_time", { length: 10 }).notNull(), // e.g. "09:00", "14:00", "21:00"
+  isActive: boolean("is_active").default(true),
+  lastTriggered: timestamp("last_triggered"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+//
+// MEDICINE INTAKE LOG (Track when patient takes medicine)
+//
+export const medicineIntakeLog = pgTable("medicine_intake_log", {
+  id: serial("id").primaryKey(),
+  prescriptionId: integer("prescription_id").references(() => prescriptions.id).notNull(),
+  patientId: integer("patient_id").references(() => patients.id).notNull(),
+  takenAt: timestamp("taken_at").defaultNow(),
+  status: varchar("status", { length: 20 }).default("taken"), // taken, missed, skipped
+  notes: text("notes"), // Optional notes from patient
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 //
@@ -217,8 +251,20 @@ export const consultationsRelations = relations(consultations, ({ one, many }) =
   prescriptions: many(prescriptions),
 }));
 
-export const prescriptionsRelations = relations(prescriptions, ({ one }) => ({
+export const prescriptionsRelations = relations(prescriptions, ({ one, many }) => ({
   consultation: one(consultations, { fields: [prescriptions.consultationId], references: [consultations.id] }),
+  reminders: many(medicineReminders),
+  intakeLog: many(medicineIntakeLog),
+}));
+
+export const medicineRemindersRelations = relations(medicineReminders, ({ one }) => ({
+  prescription: one(prescriptions, { fields: [medicineReminders.prescriptionId], references: [prescriptions.id] }),
+  patient: one(patients, { fields: [medicineReminders.patientId], references: [patients.id] }),
+}));
+
+export const medicineIntakeLogRelations = relations(medicineIntakeLog, ({ one }) => ({
+  prescription: one(prescriptions, { fields: [medicineIntakeLog.prescriptionId], references: [prescriptions.id] }),
+  patient: one(patients, { fields: [medicineIntakeLog.patientId], references: [patients.id] }),
 }));
 
 export const healthMetricsRelations = relations(healthMetrics, ({ one }) => ({

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import jwt from 'jsonwebtoken';
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -12,8 +13,53 @@ export async function middleware(request: NextRequest) {
   });
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/signin', '/signup', '/api/auth', '/admin/login','/'];
+  const publicRoutes = ['/signin', '/signup', '/api/auth', '/admin/login', '/'];
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+
+  if (request.nextUrl.pathname.startsWith('/api/trpc')) {
+    const authHeader = request.headers.get('authorization');
+
+    // Check if request is from mobile app
+    const userAgent = request.headers.get('user-agent') || '';
+    const isMobileApp = userAgent.includes('Expo') ||
+      request.headers.get('x-app-platform') === 'mobile';
+
+    // If it's a mobile app request, require authentication
+    if (isMobileApp) {
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return NextResponse.json(
+          { error: 'Unauthorized - Missing token' },
+          { status: 401 }
+        );
+      }
+
+      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+
+      try {
+        // Verify JWT token
+
+        const { payload } = await jwt.verify(token, process.env.JWT_SECRET  || "JWT_SECRET") as { payload: { userId: string, role: string, email: string } };
+
+        // Add user info to headers for tRPC context
+        const requestHeaders = new Headers(request.headers);
+        requestHeaders.set('x-user-id', payload.userId as string);
+        requestHeaders.set('x-user-role', payload.role as string);
+        requestHeaders.set('x-user-email', payload.email as string);
+
+        return NextResponse.next({
+          request: {
+            headers: requestHeaders,
+          },
+        });
+      } catch (error) {
+        return NextResponse.json(
+          { error: 'Unauthorized - Invalid token' },
+          { status: 401 }
+        );
+      }
+    }
+  }
+
 
   // If accessing public route, continue
   if (isPublicRoute) {
@@ -34,8 +80,8 @@ export async function middleware(request: NextRequest) {
   // Role-based route protection
   const roleRouteMap = {
     ADMIN: ['/admin/dashboard'],
-    HOSPITAL: ['/hospitals','/hospitals/dashboard'],
-    DOCTOR: ['/doctors','/doctors/dashboard'],
+    HOSPITAL: ['/hospitals', '/hospitals/dashboard'],
+    DOCTOR: ['/doctors', '/doctors/dashboard'],
   };
 
   // Check if user is accessing the right routes for their role

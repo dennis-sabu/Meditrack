@@ -47,9 +47,6 @@ export default function DoctorAppointmentsPage() {
   const [consultationOtpInput, setConsultationOtpInput] = useState('');
   const [showConsultationOtpModal, setShowConsultationOtpModal] = useState(false);
   const [pendingConsultationAppointment, setPendingConsultationAppointment] = useState<any>(null);
-  const [otpInput, setOtpInput] = useState('');
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [currentActionAppointment, setCurrentActionAppointment] = useState<null | { id: number; action: 'CONFIRMED' | 'PENDING' | 'COMPLETED' | 'CANCELLED' }>(null);
   const {data:hashospital, isLoading: isLoadingHospital} = api.user.getIfIHaveHospital.useQuery();
   useEffect(() => {
     if (hashospital && !hashospital.hasHospital) {
@@ -72,8 +69,6 @@ export default function DoctorAppointmentsPage() {
   const updateStatusMutation = api.user.updateAppointmentStatus.useMutation({
     onSuccess: () => {
       refetch();
-      setShowOtpModal(false);
-      setOtpInput('');
       alert('Appointment status updated successfully!');
     },
     onError: (error) => {
@@ -81,27 +76,21 @@ export default function DoctorAppointmentsPage() {
     }
   });
 
-  // Verify OTP mutation
-  const verifyOtpMutation = api.user.verifyAppointmentOTP.useMutation({
-    onSuccess: () => {
-      if (currentActionAppointment) {
-        updateStatusMutation.mutate({
-          appointmentId: currentActionAppointment?.id ?? 0,
-          status: currentActionAppointment?.action ?? 'PENDING'
-        });
-      }
-    },
-    onError: (error) => {
-      alert(`Invalid OTP: ${error.message}`);
-    }
-  });
-
   // Create consultation mutation
-  const createConsultationMutation = api.user.createConsultation.useMutation({
+  const createConsultationMutation = api.doctor.createConsultation.useMutation({
     onSuccess: () => {
       refetch();
       setShowConsultationModal(false);
       setConsultationData({ remarks: '', prescriptionDetails: '', nextVisitDate: '' });
+      setMedicines([]);
+      setCurrentMedicine({
+        name: '',
+        dosage: '',
+        frequency: '',
+        duration: 1,
+        instructions: '',
+        beforeFood: true
+      });
       alert('Consultation completed successfully!');
     },
     onError: (error) => {
@@ -568,23 +557,9 @@ export default function DoctorAppointmentsPage() {
   };
 
   const handleStatusUpdate = (appointmentId: number, status: 'CONFIRMED' | 'PENDING' | 'COMPLETED' | 'CANCELLED') => {
-    const appointment = data?.appointments.find(a => a.id === appointmentId);
-    if (status === 'CONFIRMED' || status === 'COMPLETED') {
-      setCurrentActionAppointment({ id: appointmentId, action: status });
-      setShowOtpModal(true);
-    } else {
-      updateStatusMutation.mutate({ appointmentId, status });
-    }
+    updateStatusMutation.mutate({ appointmentId, status });
   };
 
-  const handleVerifyOtp = () => {
-    if (currentActionAppointment && otpInput.length === 6) {
-      verifyOtpMutation.mutate({
-        appointmentId: currentActionAppointment.id,
-        otp: otpInput
-      });
-    }
-  };
 
   const handleStartConsultation = (appointment: any) => {
     setPendingConsultationAppointment(appointment);
@@ -631,19 +606,34 @@ export default function DoctorAppointmentsPage() {
 
   const handleCreateConsultation = () => {
     if (selectedAppointment && consultationData.remarks) {
+      // Merge any free text prescription details with the structured medicines list,
+      // because the backend mutation expects prescriptionDetails (string) and does not accept a medicines array.
+      let prescriptionText = consultationData.prescriptionDetails || '';
+
+      if (medicines.length > 0) {
+        const medsText = medicines
+          .map((m, i) => {
+            const parts = [
+              `${i + 1}. ${m.name}`,
+              m.dosage ? `Dosage: ${m.dosage}` : null,
+              m.frequency ? `Freq: ${m.frequency}` : null,
+              `Duration: ${m.duration}d`,
+              m.beforeFood ? 'Before food' : 'After food',
+              m.instructions ? `Notes: ${m.instructions}` : null
+            ].filter(Boolean);
+            return parts.join(' | ');
+          })
+          .join('\n');
+
+        prescriptionText = (prescriptionText ? prescriptionText + '\n\n' : '') + 'Medicines:\n' + medsText;
+      }
+
       createConsultationMutation.mutate({
         appointmentId: selectedAppointment?.id ?? 0,
         remarks: consultationData.remarks,
-        prescriptionDetails: consultationData.prescriptionDetails,
-        nextVisitDate: consultationData.nextVisitDate ? new Date(consultationData.nextVisitDate) : undefined,
-        medicines: medicines.map(med => ({
-          name: med.name,
-          dosage: med.dosage,
-          frequency: med.frequency,
-          duration: med.duration,
-          instructions: med.instructions,
-          beforeFood: med.beforeFood
-        }))
+        prescriptionDetails: prescriptionText,
+        nextVisitDate: consultationData.nextVisitDate,
+        medicines: medicines
       });
     }
   };
@@ -935,64 +925,7 @@ export default function DoctorAppointmentsPage() {
         </div>
 
         {/* OTP Verification Modal */}
-        {showOtpModal && (
-          <div 
-            className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center p-4 z-50"
-            onClick={() => !verifyOtpMutation.isPending && setShowOtpModal(false)}
-          >
-            <div 
-              className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <AlertCircle className="w-8 h-8 text-blue-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify OTP</h2>
-                <p className="text-gray-600">Enter the 6-digit OTP to confirm this action</p>
-              </div>
-              
-              <input
-                type="text"
-                maxLength={6}
-                value={otpInput}
-                onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
-                placeholder="Enter OTP"
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-center text-2xl font-bold tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none mb-6"
-              />
-
-              <div className="flex gap-3">
-                <button 
-                  onClick={() => {
-                    setShowOtpModal(false);
-                    setOtpInput('');
-                  }}
-                  disabled={verifyOtpMutation.isPending}
-                  className="flex-1 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleVerifyOtp}
-                  disabled={otpInput.length !== 6 || verifyOtpMutation.isPending}
-                  className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {verifyOtpMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Verifying...
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-5 h-5" />
-                      Verify
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+    
 
         {/* Consultation OTP Verification Modal */}
         {showConsultationOtpModal && (
