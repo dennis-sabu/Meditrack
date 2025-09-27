@@ -90,7 +90,7 @@ export const doctorRouter = createTRPCRouter({
             } catch (error) {
                 throw new TRPCError({
                     code: "INTERNAL_SERVER_ERROR",
-                    message: "Failed to create consultation"
+                    message: `Failed to create consultation ${error instanceof Error ? error.message : ''}`,
                 });
             }
         }),
