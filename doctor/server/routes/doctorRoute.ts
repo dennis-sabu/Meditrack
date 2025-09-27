@@ -36,7 +36,15 @@ export const doctorRouter = createTRPCRouter({
                         patient: true
                     }
                 });
-
+                const doctor = await db.query.doctors.findFirst({
+                    where: eq(doctors.id, ctx.session.user.id),
+                });
+                if (!doctor) {
+                    throw new TRPCError({
+                        code: "NOT_FOUND",
+                        message: "Doctor not found"
+                    });
+                }
                 if (!appointment) {
                     throw new TRPCError({
                         code: "NOT_FOUND",
@@ -47,7 +55,7 @@ export const doctorRouter = createTRPCRouter({
                 // Create consultation
                 const [consultation] = await db.insert(consultations).values({
                     appointmentId: input.appointmentId,
-                    doctorId: ctx.session.user.id,
+                    doctorId: doctor.id,
                     patientId: appointment.patientId,
                     remarks: input.remarks,
                     prescriptionDetails: input.prescriptionDetails,
